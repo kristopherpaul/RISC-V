@@ -17,7 +17,7 @@ void loadROM(char* fileName){
 
 int main(int argc, char* argv[]){
     if(argc != 2){
-        printf("Usage: main <filename>");
+        printf("Usage: ./main <filename>");
         return 0;
     }
     loadROM(argv[1]);
