@@ -28,13 +28,18 @@ int main(int argc, char* argv[]){
     initCPU();
     // fetch-decode-execute cycle
     while(cpu.pc < (sizeof(cpu.dram)/sizeof(cpu.dram[0]))){
-        printf("%u\n",cpu.reg[29]);
-        printf("%u\n",cpu.reg[30]);
-        printf("%u\n",cpu.reg[31]);
         u32 cur_inst = fetch();
+        if(cur_inst==0) {
+            fprintf(stderr, "ERROR: Instruction couldn't be fetched!\n");
+            break;
+        }
         cpu.pc++;
         inst parsed_inst = decode(cur_inst);
         execute(parsed_inst);
     }
+    printf("Register contents at the end of execution:\n");
+    for(int i = 0; i<32; i++)
+        printf("%llu\n", cpu.reg[i]);
+    printf("\n");
     return 0;
 }

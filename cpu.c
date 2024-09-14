@@ -23,8 +23,7 @@ inst decode(u32 ins){
 u32 fetch(){
     u32 ins = cpu.dram[cpu.pc];
     if(ins == 0){
-        fprintf(stderr, "ERROR: Instruction couldn't be fetched!");
-        exit(-1);
+        return ins;
     }
     #ifdef LITTLE_ENDIAN
         ins = ((ins&0xff) << 24) | (((ins>>8)&0xff) << 16) | (((ins>>16)&0xff) << 8) | ((ins>>24)&0xff);

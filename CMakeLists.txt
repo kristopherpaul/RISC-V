@@ -8,3 +8,4 @@ enable_language(CXX)
 # set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 add_executable(main "main.c" "cpu.c" "dram.c")
+add_executable(test "test.c" "cpu.c" "dram.c")
