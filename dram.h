@@ -4,9 +4,13 @@
 #include "utils.h"
 
 typedef struct DRAM{
-    u32 mem[1024*1024];
+    u8 mem[DRAM_SIZE];
 } DRAM;
 
 extern DRAM dram;
+
+u64 load(u64 addr, u64 size);
+
+void store(u64 addr, u64 size, u64 val);
 
 #endif
