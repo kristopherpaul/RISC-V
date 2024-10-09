@@ -26,20 +26,19 @@ int main() {
     }
     int tc = 0;
     while((entry = readdir(dp))){
-        printf("%s\n", entry->d_name);
         if(strstr(entry->d_name, ".bin")){
             tc++;
             int len = strstr(entry->d_name, ".bin") - entry->d_name;
             char fname[100] = "";
             strncpy(fname, entry->d_name, len);
-            char cmd[] = "main tests/";
+            char cmd[1000] = "main tests/";
             strcat(cmd, entry->d_name);
             strcat(cmd, " 2> tests/");
             strcat(cmd, fname);
             strcat(cmd, ".tmp");
             exec_cmd(cmd);
 
-            char dcmd[] = "cd tests & findstr /V /G:";
+            char dcmd[1000] = "cd tests & findstr /V /G:";
             strcat(dcmd, fname);
             strcat(dcmd, ".out ");
             strcat(dcmd, fname);
@@ -57,7 +56,7 @@ int main() {
             if(ftell(file) == 0){
                 fclose(file);
                 printf(ANSI_COLOR_GREEN "PASSED" ANSI_COLOR_RESET "\n");
-                char delcmd[100] = "cd tests & del ";
+                char delcmd[1000] = "cd tests & del ";
                 strcat(delcmd, fname);
                 strcat(delcmd, ".diff ");
                 strcat(delcmd, fname);
