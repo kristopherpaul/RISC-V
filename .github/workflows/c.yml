@@ -1,0 +1,41 @@
+name: C/C++ CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up MSYS2
+      uses: msys2/setup-msys2@v2
+      with:
+        msystem: MINGW64
+        install: >-
+          mingw-w64-x86_64-gcc
+          make
+
+    - name: Install dependencies
+      run: |
+        pacman -S --noconfirm mingw-w64-x86_64-gcc make
+
+    - name: Build application
+      run: make
+      shell: msys2 {0}
+
+    - name: Run tests
+      run: make test
+      shell: msys2 {0}
+
+    - name: Clean up
+      run: make clean
+      shell: msys2 {0}
