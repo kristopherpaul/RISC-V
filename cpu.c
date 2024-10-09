@@ -5,8 +5,19 @@ CPU cpu;
 
 void initCPU(){
     cpu.reg[2] = DRAM_BASE + DRAM_SIZE;
-    cpu.pc = 0;
-    //cpu.pc = DRAM_BASE;
+    //cpu.pc = 0;
+    cpu.pc = DRAM_BASE;
+}
+
+i32 sext32(u32 rest_num, u32 sign, u8 num_bits){
+    u32 val = 0;
+    for(;num_bits > 0;num_bits--){
+        val <<= 1;
+        val |= sign&1;
+    }
+    val <<= (32-num_bits);
+    val |= rest_num;
+    return (i32)val;
 }
 
 inst decode(u32 ins){
@@ -19,26 +30,20 @@ inst decode(u32 ins){
     cur_inst.shamt5 = cur_inst.rs2;
     cur_inst.shamt6 = (ins>>20) & 0x3f;
     cur_inst.funct7 = (ins>>25) & 0x7f;
-    cur_inst.im20 = (i32)(ins) & (~(u32)(0xfff));
-    cur_inst.im12 = (i32)(ins) >> 20;
-    cur_inst.im20j = (((i32)((ins>>31) << 31)) >> 11) |
-                    (((ins>>21) & 0x3ff) << 1) |
-                    (((ins>>20) & 0x1) << 11) |
-                    (((ins>>12) & 0xff) << 12);
-    cur_inst.im12b = (((i32)((ins>>31) << 31)) << 19) | 
-                    (((ins>>25) & 0x3f) << 5) |
-                    (((ins>>8) & 0xf) << 1) |
-                    (((ins>>7) & 0x1) << 11);
-    cur_inst.im12s = (((i32)((ins>>31) << 31)) >> 20) |
-                    (((ins>>25) & 0x3f) << 5) |
-                    ((ins>>7) & 0x1f);
+    
+    cur_inst.imI = sext32(((ins>>20) & 0x7ff), ins>>31, 21);
+    cur_inst.imS = sext32((((ins>>25) & 0x3f) << 5) | (((ins>>8) & 0xf) << 1) | ((ins>>7) & 0x1), ins>>31, 21);
+    cur_inst.imB = sext32((((ins>>25) & 0x3f) << 5) | (((ins>>8) & 0xf) << 1) | (((ins>>7) & 0x1) << 11), ins>>31, 20);
+    cur_inst.imU = sext32((((ins>>20) & 0x7ff) << 20) | (((ins>>12) & 0xff) << 12), ins>>31, 1);
+    cur_inst.imJ = sext32((((ins>>21) & 0xf) << 1) | (((ins>>25) & 0x3f) << 5) | (((ins>>20) & 0x1) << 11) | (((ins>>12) & 0xff) << 12), ins>>31, 12);
+
     return cur_inst;
 }
 
 u32 fetch(){
     u32 ins = 0;
     for(int i = 0;i < 4;i++){
-        ins |= dram.mem[cpu.pc+i] << (i*8);
+        ins |= dram.mem[cpu.pc-DRAM_BASE+i] << (i*8);
     }
     /*if(ins == 0){
         fprintf(stderr, "ERROR: Instruction couldn't be fetched!");
@@ -110,7 +115,7 @@ void execute(inst ins){
             break;
         
         case 0x23: //S-type
-            addr = cpu.reg[ins.rs1] + ins.im12s;
+            addr = cpu.reg[ins.rs1] + ins.imS;
             switch(ins.funct3){
                 case 0x0: //sb
                     store(addr, 8, cpu.reg[ins.rs2]);
@@ -130,19 +135,19 @@ void execute(inst ins){
         case 0x13: //I-type
             switch(ins.funct3){
                 case 0x0: //addi
-                    cpu.reg[ins.rd] = cpu.reg[ins.rs1] + ins.im12;
+                    cpu.reg[ins.rd] = cpu.reg[ins.rs1] + ins.imI;
                     break;
                 case 0x1: //slli
                     cpu.reg[ins.rd] = cpu.reg[ins.rs1] << ins.shamt6;
                     break;
                 case 0x2: //slti
-                    cpu.reg[ins.rd] = (i64)cpu.reg[ins.rs1] < (i64)ins.im12 ? 1 : 0;
+                    cpu.reg[ins.rd] = (i64)cpu.reg[ins.rs1] < (i64)ins.imI ? 1 : 0;
                     break;
                 case 0x3: //sltiu
-                    cpu.reg[ins.rd] = (u64)cpu.reg[ins.rs1] < (u64)ins.im12 ? 1 : 0;
+                    cpu.reg[ins.rd] = (u64)cpu.reg[ins.rs1] < (u64)ins.imI ? 1 : 0;
                     break;
                 case 0x4: //xori
-                    cpu.reg[ins.rd] = cpu.reg[ins.rs1] ^ ins.im12;
+                    cpu.reg[ins.rd] = cpu.reg[ins.rs1] ^ ins.imI;
                     break;
                 case 0x5:
                     switch(ins.funct7>>1){
@@ -155,16 +160,16 @@ void execute(inst ins){
                     }
                     break;
                 case 0x6: //ori
-                    cpu.reg[ins.rd] = cpu.reg[ins.rs1] | ins.im12;
+                    cpu.reg[ins.rd] = cpu.reg[ins.rs1] | ins.imI;
                     break;
                 case 0x7: //andi
-                    cpu.reg[ins.rd] = cpu.reg[ins.rs1] & ins.im12;
+                    cpu.reg[ins.rd] = cpu.reg[ins.rs1] & ins.imI;
                     break;       
             }
             break;
         
         case 0x03: //Load
-            addr = cpu.reg[ins.rs1] + ins.im12;
+            addr = cpu.reg[ins.rs1] + ins.imI;
             switch(ins.funct3){
                 case 0x0: //lb
                     cpu.reg[ins.rd] = (u64)(i64)(i8)load(addr, 8);
@@ -191,13 +196,13 @@ void execute(inst ins){
             break;
         
         case 0x17: //auipc
-            cpu.reg[ins.rd] = cpu.pc + ins.im20 - 4;
+            cpu.reg[ins.rd] = cpu.pc + ins.imU - 4;
             break;
         
         case 0x1b:
             switch(ins.funct3){
                 case 0x0: //addiw
-                    cpu.reg[ins.rd] = (u64)(i64)(i32)(cpu.reg[ins.rs1] + (u64)(i64)(i32)(ins.im12));
+                    cpu.reg[ins.rd] = (u64)(i64)(i32)(cpu.reg[ins.rs1] + (u64)(i64)(i32)(ins.imI));
                     break;
                 case 0x1: //slliw
                     cpu.reg[ins.rd] = (u64)(i64)(i32)(cpu.reg[ins.rs1] << ins.shamt5);
@@ -216,7 +221,7 @@ void execute(inst ins){
             break;
 
         case 0x37: //lui
-            cpu.reg[ins.rd] = (u64)(i64)(i32)ins.im20;
+            cpu.reg[ins.rd] = (u64)(i64)(i32)ins.imU;
             break;
         
         case 0x3b:
@@ -251,46 +256,46 @@ void execute(inst ins){
             switch(ins.funct3){
                 case 0x0: //beq
                     if(cpu.reg[ins.rs1] == cpu.reg[ins.rs2]){
-                        cpu.pc += ins.im12b - 4;
+                        cpu.pc += ins.imB - 4;
                     }
                     break;
                 case 0x1: //bne
                     if(cpu.reg[ins.rs1] != cpu.reg[ins.rs2]){
-                        cpu.pc += ins.im12b - 4;
+                        cpu.pc += ins.imB - 4;
                     }
                     break;
                 case 0x4: //blt
                     if((i64)cpu.reg[ins.rs1] < (i64)cpu.reg[ins.rs2]){
-                        cpu.pc += ins.im12b - 4;
+                        cpu.pc += ins.imB - 4;
                     }
                     break;
                 case 0x5: //bge
                     if((i64)cpu.reg[ins.rs1] >= (i64)cpu.reg[ins.rs2]){
-                        cpu.pc += ins.im12b - 4;
+                        cpu.pc += ins.imB - 4;
                     }
                     break;
                 case 0x6: //bltu
                     if(cpu.reg[ins.rs1] < cpu.reg[ins.rs2]){
-                        cpu.pc += ins.im12b - 4;
+                        cpu.pc += ins.imB - 4;
                     }
                     break;
                 case 0x7: //bgeu
                     if(cpu.reg[ins.rs1] >= cpu.reg[ins.rs2]){
-                        cpu.pc += ins.im12b - 4;
+                        cpu.pc += ins.imB - 4;
                     }
                     break;
             }
             break;
         
         case 0x67: //jalr
-            addr = (cpu.reg[ins.rs1] + ins.im12) & ~1;
+            addr = (cpu.reg[ins.rs1] + ins.imI) & ~1;
             cpu.reg[ins.rd] = cpu.pc;
             cpu.pc = addr;
             break;
 
         case 0x6f: //jal
             cpu.reg[ins.rd] = cpu.pc;
-            cpu.pc += ins.im20j - 4;
+            cpu.pc += ins.imJ - 4;
             break;
 
         case 0x0:

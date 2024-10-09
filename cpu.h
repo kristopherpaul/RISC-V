@@ -7,7 +7,7 @@ typedef struct INST {
     u8 opcode;
     u8 rd, rs1, rs2;
     u8 funct3, funct7, shamt5, shamt6;
-    i32 im20, im20j, im12, im12b, im12s;
+    i32 imI, imS, imB, imU, imJ;
 } inst;
 
 typedef struct CPU {
