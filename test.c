@@ -26,6 +26,7 @@ int main() {
     }
     int tc = 0;
     while((entry = readdir(dp))){
+        printf("%s\n", entry->d_name);
         if(strstr(entry->d_name, ".bin")){
             tc++;
             int len = strstr(entry->d_name, ".bin") - entry->d_name;
