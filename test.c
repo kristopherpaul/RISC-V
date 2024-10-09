@@ -25,6 +25,7 @@ int main() {
         return 1;
     }
     int tc = 0;
+    short failed = 0;
     while((entry = readdir(dp))){
         if(strstr(entry->d_name, ".bin")){
             tc++;
@@ -65,9 +66,13 @@ int main() {
             }else{
                 fclose(file);
                 printf(ANSI_COLOR_RED "FAILED" ANSI_COLOR_RESET "\n");
+                failed = 1;
             }
         }
     }
     closedir(dp);
+    if(failed){
+        return 1;
+    }
     return 0;
 }
