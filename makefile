@@ -15,7 +15,7 @@ $(MAIN_TARGET): $(MAIN_SRCS)
 $(TEST_TARGET): $(TEST_SRCS)
 	$(CC) $(CFLAGS) -o $(TEST_TARGET) $(TEST_SRCS)
 
-test: $(TEST_TARGET)
+test:
 	$(TEST_TARGET)
 
 clean:
