@@ -11,7 +11,7 @@ void initCPU(){
 
 i32 sext32(u32 rest_num, u32 sign, u8 num_bits){
     u32 val = 0;
-    for(;num_bits > 0;num_bits--){
+    for(u8 i = 0;i < num_bits;i++){
         val <<= 1;
         val |= sign&1;
     }
