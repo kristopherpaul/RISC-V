@@ -37,6 +37,7 @@ inst decode(u32 ins){
     cur_inst.imU = sext32((((ins>>20) & 0x7ff) << 20) | (((ins>>12) & 0xff) << 12), ins>>31, 1);
     cur_inst.imJ = sext32((((ins>>21) & 0xf) << 1) | (((ins>>25) & 0x3f) << 5) | (((ins>>20) & 0x1) << 11) | (((ins>>12) & 0xff) << 12), ins>>31, 12);
 
+    cur_inst.csraddr = (ins & 0xfff00000) >> 20;
     return cur_inst;
 }
 
@@ -55,6 +56,28 @@ u32 fetch(){
     return ins;
 }
 
+u64 load_csr(u64 addr){
+    switch(addr){
+        case SIE:
+            return cpu.csr[MIE] & cpu.csr[MIDELEG]; 
+        
+        default:
+            return cpu.csr[addr];
+    }
+}
+
+void store_csr(u64 addr, u64 val){
+    switch(addr){
+        case SIE:
+            cpu.csr[MIE] = (cpu.csr[MIE] & !cpu.csr[MIDELEG]) | (val & cpu.csr[MIDELEG]); 
+            break;
+        
+        default:
+            cpu.csr[addr] = val;
+            break;
+    }
+}
+
 void dump_regs(){
     char* reg_names[] = {"zero", "ra", "sp", "gp", "tp", "t0", "t1", "t2", "s0", "s1", "a0",
                         "a1", "a2", "a3", "a4", "a5", "a6", "a7", "s2", "s3", "s4", "s5",
@@ -64,9 +87,15 @@ void dump_regs(){
     }
 }
 
+void dump_csrs(){
+    fprintf(stderr,"MSTATUS = %llu\nMTVEC = %llu\nMEPC = %llu\nMCAUSE = %llu\n",load_csr(MSTATUS),load_csr(MTVEC),load_csr(MEPC),load_csr(MCAUSE));
+    fprintf(stderr,"SSTATUS = %llu\nSTVEC = %llu\nSEPC = %llu\nSCAUSE = %llu\n",load_csr(SSTATUS),load_csr(STVEC),load_csr(SEPC),load_csr(SCAUSE));
+}
+
 void execute(inst ins){
     cpu.reg[0] = 0;
     u64 addr;
+    u64 val;
     switch(ins.opcode){
         case 0x33: //R-type
             switch(ins.funct3){
@@ -298,13 +327,49 @@ void execute(inst ins){
             cpu.pc += ins.imJ - 4;
             break;
 
+        case 0x73:
+            switch(ins.funct3){
+                case 0x1: //csrrw
+                    val = load_csr(ins.csraddr);
+                    store_csr(ins.csraddr, cpu.reg[ins.rs1]);
+                    cpu.reg[ins.rd] = val;
+                    break;
+                case 0x2: //csrrs
+                    val = load_csr(ins.csraddr);
+                    store_csr(ins.csraddr, val | cpu.reg[ins.rs1]);
+                    cpu.reg[ins.rd] = val;
+                    break;
+                case 0x3: //csrrc
+                    val = load_csr(ins.csraddr);
+                    store_csr(ins.csraddr, val & (!cpu.reg[ins.rs1]));
+                    cpu.reg[ins.rd] = val;
+                    break;
+                case 0x5: //csrrwi
+                    cpu.reg[ins.rd] = load_csr(ins.csraddr);
+                    store_csr(ins.csraddr, (u64)ins.rs1);
+                    break;
+                case 0x6: //csrrsi
+                    val = load_csr(ins.csraddr);
+                    store_csr(ins.csraddr, val | ((u64)ins.rs1));
+                    cpu.reg[ins.rd] = val;
+                    break;
+                case 0x7: //csrrci
+                    val = load_csr(ins.csraddr);
+                    store_csr(ins.csraddr, val & (!((u64)ins.rs1)));
+                    cpu.reg[ins.rd] = val;
+                    break;
+            }
+            break;
+
         case 0x0:
             dump_regs();
+            dump_csrs();
             exit(0);
             break;
 
         default:
             dump_regs();
+            dump_csrs();
             fprintf(stderr, "ERROR: Operation hasn't been implemented yet!");
             exit(-1);
             break;

@@ -54,5 +54,6 @@ int main(int argc, char* argv[]){
         execute(parsed_inst);
     }
     dump_regs();
+    dump_csrs();
     return 0;
 }
