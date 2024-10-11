@@ -7,6 +7,7 @@ void initCPU(){
     cpu.reg[2] = DRAM_BASE + DRAM_SIZE;
     //cpu.pc = 0;
     cpu.pc = DRAM_BASE;
+    cpu.mode = Machine;
 }
 
 i32 sext32(u32 rest_num, u32 sign, u8 num_bits){
@@ -30,6 +31,9 @@ inst decode(u32 ins){
     cur_inst.shamt5 = cur_inst.rs2;
     cur_inst.shamt6 = (ins>>20) & 0x3f;
     cur_inst.funct7 = (ins>>25) & 0x7f;
+    cur_inst.funct5 = (ins>>27) & 0x1f;
+    cur_inst.aq = cur_inst.funct7 & 0x2;
+    cur_inst.rl = cur_inst.funct7 & 0x1;
     
     cur_inst.imI = sext32(((ins>>20) & 0x7ff), ins>>31, 21);
     cur_inst.imS = sext32((((ins>>25) & 0x3f) << 5) | (((ins>>8) & 0xf) << 1) | ((ins>>7) & 0x1), ins>>31, 21);
@@ -273,8 +277,28 @@ void execute(inst ins){
                         case 0x00: //srlw
                             cpu.reg[ins.rd] = (u64)(i32)((u32)(cpu.reg[ins.rs1]) >> ins.shamt5);
                             break;
+                        case 0x01: //divu
+                            if(cpu.reg[ins.rs2] == 0){
+                                //divison by 0, set DZ csr flag
+                                cpu.reg[ins.rd] = 0xffffffffffffffff;
+                            }else{
+                                cpu.reg[ins.rd] = cpu.reg[ins.rs1]/cpu.reg[ins.rs2];
+                            }
+                            break;
                         case 0x20: //sraw
                             cpu.reg[ins.rd] = (u64)((i32)cpu.reg[ins.rs1] >> (i32)ins.shamt5);
+                            break;
+                    }
+                    break;
+                case 0x7:
+                    switch(ins.funct7){
+                        case 0x01: //remuw
+                            if(cpu.reg[ins.rs2] == 0){
+                                //divison by 0, set DZ csr flag
+                                cpu.reg[ins.rd] = cpu.reg[ins.rs1];
+                            }else{
+                                cpu.reg[ins.rd] = (u64)(i32)((u32)(cpu.reg[ins.rs1]) % (u32)(cpu.reg[ins.rs2]));
+                            }
                             break;
                     }
                     break;
@@ -329,6 +353,57 @@ void execute(inst ins){
 
         case 0x73:
             switch(ins.funct3){
+                case 0x0:
+                    switch(ins.rs2){
+                        case 0x2:
+                            switch(ins.funct7){
+                                case 0x8: //sret
+                                    cpu.pc = load_csr(SEPC);
+                                    if(((load_csr(SSTATUS)>>8) & 0x1) == 1){
+                                        cpu.mode = Supervisor;
+                                    }else{
+                                        cpu.mode = User;
+                                    }
+                                    if(((load_csr(SSTATUS)>>5) & 0x1) == 1){
+                                        store_csr(SSTATUS, load_csr(SSTATUS) | (1<<1));
+                                    }else{
+                                        store_csr(SSTATUS, load_csr(SSTATUS) & !(1<<1));
+                                    }
+                                    store_csr(SSTATUS, load_csr(SSTATUS) | (1<<5));
+                                    store_csr(SSTATUS, load_csr(SSTATUS) & !(1<<8));
+                                    break;
+                                case 0x18: //mret
+                                    cpu.pc = load_csr(MEPC);
+                                    switch((load_csr(MSTATUS)>>11) & 0x3){
+                                        case 1:
+                                            cpu.mode = Supervisor;
+                                            break;
+                                        case 2:
+                                            cpu.mode = Machine;
+                                            break;
+                                        default:
+                                            cpu.mode = User;
+                                            break;
+                                    }
+                                    if(((load_csr(MSTATUS)>>7) & 1) == 1){
+                                        store_csr(MSTATUS, load_csr(MSTATUS) | (1<<3));
+                                    }else{
+                                        store_csr(MSTATUS, load_csr(MSTATUS) & !(1<<3));
+                                    }
+                                    store_csr(MSTATUS, load_csr(MSTATUS) | (1<<7));
+                                    store_csr(MSTATUS, load_csr(MSTATUS) & !(0x3<<11));
+                                    break;
+                            }
+                            break;
+                        default:
+                            switch(ins.funct7){
+                                case 0x9:
+                                    //sfence.vma
+                                    break;
+                            }
+                            break;
+                    }
+                    break;
                 case 0x1: //csrrw
                     val = load_csr(ins.csraddr);
                     store_csr(ins.csraddr, cpu.reg[ins.rs1]);
@@ -357,6 +432,39 @@ void execute(inst ins){
                     val = load_csr(ins.csraddr);
                     store_csr(ins.csraddr, val & (!((u64)ins.rs1)));
                     cpu.reg[ins.rd] = val;
+                    break;
+            }
+            break;
+
+        case 0x2f: //Atomic instructions
+            switch(ins.funct5){
+                case 0x00:
+                    switch(ins.funct3){
+                        case 0x2: //amoadd.w
+                            val = load(cpu.reg[ins.rs1], 32) + cpu.reg[ins.rs2];
+                            store(cpu.reg[ins.rs1], 32, val);
+                            cpu.reg[ins.rd] = val;
+                            break;
+                        case 0x3: //amoadd.d
+                            val = load(cpu.reg[ins.rs1], 64) + cpu.reg[ins.rs2];
+                            store(cpu.reg[ins.rs1], 64, val);
+                            cpu.reg[ins.rd] = val;
+                            break;
+                    }
+                    break;
+                case 0x01:
+                    switch(ins.funct3){
+                        case 0x2: //amoswap.w
+                            val = load(cpu.reg[ins.rs1], 32);
+                            store(cpu.reg[ins.rs1], 32, cpu.reg[ins.rs2]);
+                            cpu.reg[ins.rd] = val;
+                            break;
+                        case 0x3: //amoswap.d
+                            val = load(cpu.reg[ins.rs1], 64);
+                            store(cpu.reg[ins.rs1], 64, cpu.reg[ins.rs2]);
+                            cpu.reg[ins.rd] = val;
+                            break;
+                    }
                     break;
             }
             break;
