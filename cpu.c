@@ -83,7 +83,7 @@ void dump_regs(){
                         "a1", "a2", "a3", "a4", "a5", "a6", "a7", "s2", "s3", "s4", "s5",
                         "s6", "s7", "s8", "s9", "s10", "s11", "t3", "t4", "t5", "t6"};
     for(int i = 0;i < 32;i++){
-        fprintf(stderr,"x%d (%s) = %llu, %lld\n",i,reg_names[i],cpu.reg[i],cpu.reg[i]);
+        fprintf(stderr,"x%d (%s) = %lld, %llu\n",i,reg_names[i],cpu.reg[i],cpu.reg[i]);
     }
 }
 
