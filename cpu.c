@@ -100,6 +100,7 @@ void execute(inst ins){
     cpu.reg[0] = 0;
     u64 addr;
     u64 val;
+    u32 shamt = (u32)(u64)(cpu.reg[ins.rs2] & 0x3f);
     switch(ins.opcode){
         case 0x33: //R-type
             switch(ins.funct3){
@@ -117,7 +118,7 @@ void execute(inst ins){
                     }
                     break;
                 case 0x1: //sll
-                    cpu.reg[ins.rd] = cpu.reg[ins.rs1] << ins.shamt5;
+                    cpu.reg[ins.rd] = cpu.reg[ins.rs1] << shamt;
                     break;
                 case 0x2: //slt
                     cpu.reg[ins.rd] = (i64)cpu.reg[ins.rs1] < (i64)cpu.reg[ins.rs2] ? 1 : 0;
@@ -131,10 +132,10 @@ void execute(inst ins){
                 case 0x5:
                     switch(ins.funct7){
                         case 0x00: //srl
-                            cpu.reg[ins.rd] = cpu.reg[ins.rs1] >> ins.shamt5;
+                            cpu.reg[ins.rd] = cpu.reg[ins.rs1] >> shamt;
                             break;
                         case 0x20: //sra
-                            cpu.reg[ins.rd] = (u64)((i64)cpu.reg[ins.rs1] >> ins.shamt5);
+                            cpu.reg[ins.rd] = (u64)((i64)cpu.reg[ins.rs1] >> shamt);
                             break;
                     }
                     break;
