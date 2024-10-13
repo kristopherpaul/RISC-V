@@ -22,5 +22,4 @@ main:
     
    #performing operations for sanity check   
    add t3, t0,t1       
-   add t4, t1, t2	
-  
+   add t4, t1, t2
