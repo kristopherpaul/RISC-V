@@ -1,6 +1,6 @@
 
 main:
-    # Load the 64-bit value into t0
+    #Load first half into t0
     lui t0, 0x11223         
     ori t0, t0, 0x344     
     addi t0, t0, 0x5
