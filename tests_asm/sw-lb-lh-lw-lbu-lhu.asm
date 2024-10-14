@@ -1,5 +1,5 @@
 main:
-     lui t0, 0xFFF8F  # t0= 0xFFF80000
+    lui t0, 0xFFF8F  # t0= 0xFFF8F000
 
     # Storing the word
     addi sp, sp, -4     
@@ -19,9 +19,6 @@ main:
     
     #Loading the unsigned word
     lbu t5, 0(sp)
-    
-   #performing operations for sanity check   
-   add s1, t1,t2       
-   add s2, t2, t3 	
-   add s3, t3, t4
-   add s4, t4, t5
+    addi sp, sp, 4
+     	
+  
