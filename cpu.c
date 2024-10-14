@@ -47,6 +47,9 @@ inst decode(u32 ins){
 
 u32 fetch(){
     u32 ins = 0;
+    if(cpu.pc < DRAM_BASE){
+        return ins;
+    }
     for(int i = 0;i < 4;i++){
         ins |= dram.mem[cpu.pc-DRAM_BASE+i] << (i*8);
     }
