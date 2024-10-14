@@ -6,7 +6,7 @@ u64 load(u64 addr, u64 size){
     int index = addr - DRAM_BASE;
     u64 val = 0;
     for(int i = 0;i < (size/8);i++){
-        val |= dram.mem[index+i] << (i*8);
+        val |= (u64)dram.mem[index+i] << (i*8);
     }
     return val;
 }
