@@ -27,8 +27,8 @@ int main(int argc, char* argv[]){
     // fetch-decode-execute cycle
     while(cpu.pc < DRAM_BASE+DRAM_SIZE){
         u32 cur_inst = fetch();
-        cpu.pc += 4;
         inst parsed_inst = decode(cur_inst);
+        cpu.pc += 4;
         // debug mode
         if(argc == 3 && argv[2][0] == '-' && argv[2][1] == 'd'){
             printf("-------------\n");
