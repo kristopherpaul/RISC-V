@@ -274,12 +274,12 @@ void execute(inst ins){
                     }
                     break;
                 case 0x1: //sllw
-                    cpu.reg[ins.rd] = (u64)(i32)((u32)(cpu.reg[ins.rs1]) << ins.shamt5);
+                    cpu.reg[ins.rd] = (u64)(i32)((u32)(cpu.reg[ins.rs1]) << cpu.reg[ins.rs2]);
                     break;
                 case 0x5:
                     switch(ins.funct7){
                         case 0x00: //srlw
-                            cpu.reg[ins.rd] = (u64)(i32)((u32)(cpu.reg[ins.rs1]) >> ins.shamt5);
+                            cpu.reg[ins.rd] = (u64)(i32)((u32)(cpu.reg[ins.rs1]) >> cpu.reg[ins.rs2]);
                             break;
                         case 0x01: //divu
                             if(cpu.reg[ins.rs2] == 0){
@@ -290,7 +290,7 @@ void execute(inst ins){
                             }
                             break;
                         case 0x20: //sraw
-                            cpu.reg[ins.rd] = (u64)((i32)cpu.reg[ins.rs1] >> (i32)ins.shamt5);
+                            cpu.reg[ins.rd] = (u64)((i32)cpu.reg[ins.rs1] >> (i32)cpu.reg[ins.rs2]);
                             break;
                     }
                     break;
