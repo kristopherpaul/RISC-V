@@ -38,3 +38,9 @@
 #define STVAL 0x143 // Supervisor bad address or instruction
 #define SIP 0x144 // Supervisor interrupt pending
 #define SATP 0x180 // Supervisor address translation and protection
+
+//Core Local Interrupt (CLINT)
+#define CLINT_BASE 0x2000000 //base address for the CLINT
+#define CLINT_MTIMECMP (CLINT_BASE + 0x4000) //addresses for mtimecmp register
+#define CLINT_MTIME (CLINT_BASE + 0xbff8) //addresses for mtime register
+
