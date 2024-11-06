@@ -38,3 +38,10 @@
 #define STVAL 0x143 // Supervisor bad address or instruction
 #define SIP 0x144 // Supervisor interrupt pending
 #define SATP 0x180 // Supervisor address translation and protection
+
+//plic
+#define PLIC_PENDING (PLIC_BASE + 0x1000)
+#define PLIC_SENABLE (PLIC_BASE + 0x2080)
+#define PLIC_SPRIORITY (PLIC_BASE + 0x201000)
+#define PLIC_SCLAIM (PLIC_BASE + 0x201004)
+#define PLIC_BASE 0XC000000
