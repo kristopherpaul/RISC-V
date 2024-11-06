@@ -1,5 +1,7 @@
 #include <clint.h>
 
+CLINT clint;
+
 u64 clint_load(u64 addr, u64 size, Exception* exception) {
     if (size == 64) {
         return clint_load64(addr);
