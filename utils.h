@@ -41,6 +41,6 @@
 
 //Core Local Interrupt (CLINT)
 #define CLINT_BASE 0x2000000 //base address for the CLINT
-#define CLINT_MTIMECMP (CLINT_BASE + 0x4000) //addresses for mtimecmp register
-#define CLINT_MTIME (CLINT_BASE + 0xbff8) //addresses for mtime register
+#define CLINT_MTIMECMP (0x2000000 + 0x4000) //addresses for mtimecmp register
+#define CLINT_MTIME (0x2000000 + 0xbff8) //addresses for mtime register
 
