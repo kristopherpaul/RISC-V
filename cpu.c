@@ -1,5 +1,6 @@
 #include "cpu.h"
 #include "dram.h"
+#include "plic.h"
 
 CPU cpu;
 
@@ -8,6 +9,10 @@ void initCPU(){
     //cpu.pc = 0;
     cpu.pc = DRAM_BASE;
     cpu.mode = Machine;
+    plic.pending = 0;
+    plic.senable = 0;
+    plic.spriority = 0;
+    plic.sclaim = 0;
 }
 
 i32 sext32(u32 rest_num, u32 sign, u8 num_bits){
