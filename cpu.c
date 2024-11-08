@@ -362,6 +362,22 @@ void execute(inst ins){
             switch(ins.funct3){
                 case 0x0:
                     switch(ins.rs2){
+                        case 0x0:
+                            switch(ins.funct7){
+                                case 0x0: 
+                                    switch (cpu.mode) {
+                                        case User:
+                                            // return EnvironmentCallFromUMode;
+                                        case Supervisor:
+                                            // return EnvironmentCallFromSMode;
+                                        case Machine:
+                                            // return EnvironmentCallFromMMode;
+                                        default:
+                                            // return IllegalInstruction;
+                                    }
+                                break;
+                            }
+                            break;
                         case 0x2:
                             switch(ins.funct7){
                                 case 0x8: //sret
