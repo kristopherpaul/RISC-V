@@ -118,6 +118,12 @@ void execute(inst ins){
                         case 0x20: //sub
                             cpu.reg[ins.rd] = cpu.reg[ins.rs1] - cpu.reg[ins.rs2];
                             break;
+                        default:
+                            dump_regs();
+                            dump_csrs();
+                            fprintf(stderr, "ERROR: Operation hasn't been implemented yet!");
+                            exit(-1);
+                            break;
                     }
                     break;
                 case 0x1: //sll
@@ -140,6 +146,12 @@ void execute(inst ins){
                         case 0x20: //sra
                             cpu.reg[ins.rd] = (u64)((i64)cpu.reg[ins.rs1] >> shamt);
                             break;
+                        default:
+                            dump_regs();
+                            dump_csrs();
+                            fprintf(stderr, "ERROR: Operation hasn't been implemented yet!");
+                            exit(-1);
+                            break;
                     }
                     break;
                 case 0x6: //or
@@ -147,6 +159,12 @@ void execute(inst ins){
                     break;
                 case 0x7: //and
                     cpu.reg[ins.rd] = cpu.reg[ins.rs1] & cpu.reg[ins.rs2];
+                    break;
+                default:
+                    dump_regs();
+                    dump_csrs();
+                    fprintf(stderr, "ERROR: Operation hasn't been implemented yet!");
+                    exit(-1);
                     break;
             }
             break;
@@ -165,6 +183,12 @@ void execute(inst ins){
                     break;
                 case 0x3: //sd
                     store(addr, 64, cpu.reg[ins.rs2]);
+                    break;
+                default:
+                    dump_regs();
+                    dump_csrs();
+                    fprintf(stderr, "ERROR: Operation hasn't been implemented yet!");
+                    exit(-1);
                     break;
             }
             break;
@@ -193,7 +217,13 @@ void execute(inst ins){
                             break;
                         case 0x10: //srai
                             cpu.reg[ins.rd] = (u64)((i64)cpu.reg[ins.rs1] >> ins.shamt6);
-                            break;    
+                            break;
+                        default:
+                            dump_regs();
+                            dump_csrs();
+                            fprintf(stderr, "ERROR: Operation hasn't been implemented yet!");
+                            exit(-1);
+                            break;
                     }
                     break;
                 case 0x6: //ori
@@ -201,7 +231,13 @@ void execute(inst ins){
                     break;
                 case 0x7: //andi
                     cpu.reg[ins.rd] = cpu.reg[ins.rs1] & ins.imI;
-                    break;       
+                    break;
+                default:
+                    dump_regs();
+                    dump_csrs();
+                    fprintf(stderr, "ERROR: Operation hasn't been implemented yet!");
+                    exit(-1);
+                    break;
             }
             break;
         
@@ -229,6 +265,12 @@ void execute(inst ins){
                 case 0x6: //lwu
                     cpu.reg[ins.rd] = load(addr, 32);
                     break;
+                default:
+                    dump_regs();
+                    dump_csrs();
+                    fprintf(stderr, "ERROR: Operation hasn't been implemented yet!");
+                    exit(-1);
+                    break;
             }
             break;
         
@@ -252,7 +294,19 @@ void execute(inst ins){
                         case 0x20: //sraiw
                             cpu.reg[ins.rd] = (u64)(i64)((i32)cpu.reg[ins.rs1] >> ins.shamt5);
                             break;
+                        default:
+                            dump_regs();
+                            dump_csrs();
+                            fprintf(stderr, "ERROR: Operation hasn't been implemented yet!");
+                            exit(-1);
+                            break;
                     }
+                    break;
+                default:
+                    dump_regs();
+                    dump_csrs();
+                    fprintf(stderr, "ERROR: Operation hasn't been implemented yet!");
+                    exit(-1);
                     break;
             }
             break;
@@ -270,6 +324,12 @@ void execute(inst ins){
                             break;
                         case 0x20: //subw
                             cpu.reg[ins.rd] = (u64)(i32)(cpu.reg[ins.rs1] - cpu.reg[ins.rs2]);
+                            break;
+                        default:
+                            dump_regs();
+                            dump_csrs();
+                            fprintf(stderr, "ERROR: Operation hasn't been implemented yet!");
+                            exit(-1);
                             break;
                     }
                     break;
@@ -292,6 +352,12 @@ void execute(inst ins){
                         case 0x20: //sraw
                             cpu.reg[ins.rd] = (u64)((i32)cpu.reg[ins.rs1] >> (i32)cpu.reg[ins.rs2]);
                             break;
+                        default:
+                            dump_regs();
+                            dump_csrs();
+                            fprintf(stderr, "ERROR: Operation hasn't been implemented yet!");
+                            exit(-1);
+                            break;
                     }
                     break;
                 case 0x7:
@@ -304,7 +370,19 @@ void execute(inst ins){
                                 cpu.reg[ins.rd] = (u64)(i32)((u32)(cpu.reg[ins.rs1]) % (u32)(cpu.reg[ins.rs2]));
                             }
                             break;
+                        default:
+                            dump_regs();
+                            dump_csrs();
+                            fprintf(stderr, "ERROR: Operation hasn't been implemented yet!");
+                            exit(-1);
+                            break;
                     }
+                    break;
+                default:
+                    dump_regs();
+                    dump_csrs();
+                    fprintf(stderr, "ERROR: Operation hasn't been implemented yet!");
+                    exit(-1);
                     break;
             }
             break;
@@ -340,6 +418,12 @@ void execute(inst ins){
                     if(cpu.reg[ins.rs1] >= cpu.reg[ins.rs2]){
                         cpu.pc += ins.imB - 4;
                     }
+                    break;
+                default:
+                    dump_regs();
+                    dump_csrs();
+                    fprintf(stderr, "ERROR: Operation hasn't been implemented yet!");
+                    exit(-1);
                     break;
             }
             break;
@@ -397,12 +481,24 @@ void execute(inst ins){
                                     store_csr(MSTATUS, load_csr(MSTATUS) | (1<<7));
                                     store_csr(MSTATUS, load_csr(MSTATUS) & !(0x3<<11));
                                     break;
+                                default:
+                                    dump_regs();
+                                    dump_csrs();
+                                    fprintf(stderr, "ERROR: Operation hasn't been implemented yet!");
+                                    exit(-1);
+                                    break;
                             }
                             break;
                         default:
                             switch(ins.funct7){
                                 case 0x9:
                                     //sfence.vma
+                                    break;
+                                default:
+                                    dump_regs();
+                                    dump_csrs();
+                                    fprintf(stderr, "ERROR: Operation hasn't been implemented yet!");
+                                    exit(-1);
                                     break;
                             }
                             break;
@@ -437,6 +533,12 @@ void execute(inst ins){
                     store_csr(ins.csraddr, val & (!((u64)ins.rs1)));
                     cpu.reg[ins.rd] = val;
                     break;
+                default:
+                    dump_regs();
+                    dump_csrs();
+                    fprintf(stderr, "ERROR: Operation hasn't been implemented yet!");
+                    exit(-1);
+                    break;
             }
             break;
 
@@ -454,6 +556,12 @@ void execute(inst ins){
                             store(cpu.reg[ins.rs1], 64, val);
                             cpu.reg[ins.rd] = val;
                             break;
+                        default:
+                            dump_regs();
+                            dump_csrs();
+                            fprintf(stderr, "ERROR: Operation hasn't been implemented yet!");
+                            exit(-1);
+                            break;
                     }
                     break;
                 case 0x01:
@@ -468,15 +576,24 @@ void execute(inst ins){
                             store(cpu.reg[ins.rs1], 64, cpu.reg[ins.rs2]);
                             cpu.reg[ins.rd] = val;
                             break;
+                        default:
+                            dump_regs();
+                            dump_csrs();
+                            fprintf(stderr, "ERROR: Operation hasn't been implemented yet!");
+                            exit(-1);
+                            break;
                     }
+                    break;
+                default:
+                    dump_regs();
+                    dump_csrs();
+                    fprintf(stderr, "ERROR: Operation hasn't been implemented yet!");
+                    exit(-1);
                     break;
             }
             break;
 
         case 0x0:
-            dump_regs();
-            dump_csrs();
-            exit(0);
             break;
 
         default:
