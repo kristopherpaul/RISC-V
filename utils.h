@@ -15,6 +15,8 @@
 
 #define DRAM_SIZE 1024 * 1024 * 128
 #define DRAM_BASE 0x80000000
+#define UART_BASE 0x10000000
+#define UART_SIZE 0x100
 
 // Machine-level CSRs
 #define MHARTID 0xf14 // Hardware thread ID
