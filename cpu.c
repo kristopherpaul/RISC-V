@@ -109,6 +109,7 @@ Result execute(inst ins){
     cpu.reg[0] = 0;
     u64 addr;
     u64 val;
+    Result load_res, store_res;
     u32 shamt = (u32)(u64)(cpu.reg[ins.rs2] & 0x3f);
     switch(ins.opcode){
         case 0x33: //R-type
@@ -227,37 +228,37 @@ Result execute(inst ins){
             addr = cpu.reg[ins.rs1] + ins.imI;
             switch(ins.funct3){
                 case 0x0: //lb
-                    Result load_res = load(addr, 8);
+                    load_res = load(addr, 8);
                     ret.exception = load_res.exception;
                     cpu.reg[ins.rd] = (u64)(i64)(i8)load_res.value;
                     break;
                 case 0x1: //lh
-                    Result load_res = load(addr, 16);
+                    load_res = load(addr, 16);
                     ret.exception = load_res.exception;
                     cpu.reg[ins.rd] = (u64)(i64)(i16)load_res.value;
                     break;
                 case 0x2: //lw
-                    Result load_res = load(addr, 32);
+                    load_res = load(addr, 32);
                     ret.exception = load_res.exception;
                     cpu.reg[ins.rd] = (u64)(i64)(i32)load_res.value;
                     break;
                 case 0x3: //ld
-                    Result load_res = load(addr, 64);
+                    load_res = load(addr, 64);
                     ret.exception = load_res.exception;
                     cpu.reg[ins.rd] = load_res.value;
                     break;
                 case 0x4: //lbu
-                    Result load_res = load(addr, 8);
+                    load_res = load(addr, 8);
                     ret.exception = load_res.exception;
                     cpu.reg[ins.rd] = load_res.value;
                     break;
                 case 0x5: //lhu
-                    Result load_res = load(addr, 16);
+                    load_res = load(addr, 16);
                     ret.exception = load_res.exception;
                     cpu.reg[ins.rd] = load_res.value;
                     break;
                 case 0x6: //lwu
-                    Result load_res = load(addr, 32);
+                    load_res = load(addr, 32);
                     ret.exception = load_res.exception;
                     cpu.reg[ins.rd] = load_res.value;
                     break;
@@ -535,20 +536,20 @@ Result execute(inst ins){
                 case 0x00:
                     switch(ins.funct3){
                         case 0x2: //amoadd.w
-                            Result load_res = load(cpu.reg[ins.rs1], 32);
+                            load_res = load(cpu.reg[ins.rs1], 32);
                             ret.exception = load_res.exception;
                             val = load_res.value + cpu.reg[ins.rs2];
-                            Result store_res = store(cpu.reg[ins.rs1], 32, val);
+                            store_res = store(cpu.reg[ins.rs1], 32, val);
                             if(ret.exception == Null){
                                 ret.exception = store_res.exception;
                             }
                             cpu.reg[ins.rd] = val;
                             break;
                         case 0x3: //amoadd.d
-                            Result load_res = load(cpu.reg[ins.rs1], 64);
+                            load_res = load(cpu.reg[ins.rs1], 64);
                             ret.exception = load_res.exception;
                             val = load_res.value + cpu.reg[ins.rs2];
-                            Result store_res = store(cpu.reg[ins.rs1], 64, val);
+                            store_res = store(cpu.reg[ins.rs1], 64, val);
                             if(ret.exception == Null){
                                 ret.exception = store_res.exception;
                             }
@@ -561,20 +562,20 @@ Result execute(inst ins){
                 case 0x01:
                     switch(ins.funct3){
                         case 0x2: //amoswap.w
-                            Result load_res = load(cpu.reg[ins.rs1], 32);
+                            load_res = load(cpu.reg[ins.rs1], 32);
                             ret.exception = load_res.exception;
                             val = load_res.value;
-                            Result store_res = store(cpu.reg[ins.rs1], 32, cpu.reg[ins.rs2]);
+                            store_res = store(cpu.reg[ins.rs1], 32, cpu.reg[ins.rs2]);
                             if(ret.exception == Null){
                                 ret.exception = store_res.exception;
                             }
                             cpu.reg[ins.rd] = val;
                             break;
                         case 0x3: //amoswap.d
-                            Result load_res = load(cpu.reg[ins.rs1], 64);
+                            load_res = load(cpu.reg[ins.rs1], 64);
                             ret.exception = load_res.exception;
                             val = load_res.value;
-                            Result store_res = store(cpu.reg[ins.rs1], 64, cpu.reg[ins.rs2]);
+                            store_res = store(cpu.reg[ins.rs1], 64, cpu.reg[ins.rs2]);
                             if(ret.exception == Null){
                                 ret.exception = store_res.exception;
                             }
