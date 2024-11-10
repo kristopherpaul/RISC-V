@@ -29,7 +29,7 @@ int main(int argc, char* argv[]){
     while(cpu.pc < DRAM_BASE+DRAM_SIZE){
         Result cur_inst_res = fetch();
         u32 cur_inst;
-        if(cur_inst_res.exception != NULL){
+        if(cur_inst_res.exception != Null){
             take_trap(cur_inst_res.exception);
             if(is_fatal(cur_inst_res.exception)){
                 fprintf(stderr, "ERROR: %s", Exceptions[cur_inst_res.exception]);

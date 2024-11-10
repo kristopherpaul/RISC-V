@@ -56,7 +56,8 @@ typedef enum Exception{
     EnvironmentCallFromMMode,
     InstructionPageFault,
     LoadPageFault,
-    StoreAMOPageFault
+    StoreAMOPageFault,
+    Null
 } Exception;
 
 const char *Exceptions[] = {"InstructionAddressMisaligned",

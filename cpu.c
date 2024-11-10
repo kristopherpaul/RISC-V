@@ -47,7 +47,7 @@ inst decode(u32 ins){
 
 Result fetch(){
     Result ret;
-    ret.exception = NULL;
+    ret.exception = Null;
     u32 ins = 0;
     if(cpu.pc < DRAM_BASE){
         ret.exception = InstructionAccessFault;
@@ -105,7 +105,7 @@ void dump_csrs(){
 
 Result execute(inst ins){
     Result ret;
-    ret.exception = NULL;
+    ret.exception = Null;
     cpu.reg[0] = 0;
     u64 addr;
     u64 val;
@@ -539,7 +539,7 @@ Result execute(inst ins){
                             ret.exception = load_res.exception;
                             val = load_res.value + cpu.reg[ins.rs2];
                             Result store_res = store(cpu.reg[ins.rs1], 32, val);
-                            if(ret.exception == NULL){
+                            if(ret.exception == Null){
                                 ret.exception = store_res.exception;
                             }
                             cpu.reg[ins.rd] = val;
@@ -549,7 +549,7 @@ Result execute(inst ins){
                             ret.exception = load_res.exception;
                             val = load_res.value + cpu.reg[ins.rs2];
                             Result store_res = store(cpu.reg[ins.rs1], 64, val);
-                            if(ret.exception == NULL){
+                            if(ret.exception == Null){
                                 ret.exception = store_res.exception;
                             }
                             cpu.reg[ins.rd] = val;
@@ -565,7 +565,7 @@ Result execute(inst ins){
                             ret.exception = load_res.exception;
                             val = load_res.value;
                             Result store_res = store(cpu.reg[ins.rs1], 32, cpu.reg[ins.rs2]);
-                            if(ret.exception == NULL){
+                            if(ret.exception == Null){
                                 ret.exception = store_res.exception;
                             }
                             cpu.reg[ins.rd] = val;
@@ -575,7 +575,7 @@ Result execute(inst ins){
                             ret.exception = load_res.exception;
                             val = load_res.value;
                             Result store_res = store(cpu.reg[ins.rs1], 64, cpu.reg[ins.rs2]);
-                            if(ret.exception == NULL){
+                            if(ret.exception == Null){
                                 ret.exception = store_res.exception;
                             }
                             cpu.reg[ins.rd] = val;

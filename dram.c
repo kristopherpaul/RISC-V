@@ -5,7 +5,7 @@ DRAM dram;
 
 Result load(u64 addr, u64 size){
     Result ret;
-    ret.exception = NULL;
+    ret.exception = Null;
     if(size != 8 && size != 16 && size != 32 && size != 64){
         ret.exception = LoadAccessFault;
         return ret;
@@ -21,7 +21,7 @@ Result load(u64 addr, u64 size){
 
 Result store(u64 addr, u64 size, u64 val){
     Result ret;
-    ret.exception = NULL;
+    ret.exception = Null;
     if(size != 8 && size != 16 && size != 32 && size != 64){
         ret.exception = StoreAMOAccessFault;
         return ret;
