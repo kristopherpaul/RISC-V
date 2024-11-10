@@ -39,6 +39,9 @@
 #define SIP 0x144 // Supervisor interrupt pending
 #define SATP 0x180 // Supervisor address translation and protection
 
+#ifndef UTILS_H
+#define UTILS_H
+
 typedef enum Exception{
     InstructionAddressMisaligned,
     InstructionAccessFault,
@@ -75,3 +78,5 @@ typedef struct RESULT {
     u64 value;
     Exception exception;
 } Result;
+
+#endif
