@@ -1,4 +1,3 @@
-#include "utils.h"
 #include "dram.h"
 
 DRAM dram;

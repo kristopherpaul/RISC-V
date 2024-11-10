@@ -2,6 +2,7 @@
 #define CPU_H
 
 #include "utils.h"
+#include "dram.h"
 
 typedef struct INST {
     u8 opcode;

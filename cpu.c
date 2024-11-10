@@ -1,5 +1,4 @@
 #include "cpu.h"
-#include "dram.h"
 
 CPU cpu;
 

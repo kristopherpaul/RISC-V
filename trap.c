@@ -1,6 +1,4 @@
-#include "utils.h"
 #include "trap.h"
-#include "cpu.h"
 
 u64 exception_code(Exception e){
     switch(e){
