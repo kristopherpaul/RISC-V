@@ -2,6 +2,8 @@
 #include<stdint.h>
 #include<stdlib.h>
 
+#pragma GCC diagnostic warning "-Wunused"
+
 #define u64 uint64_t
 #define i64 int64_t
 #define i32 int32_t
@@ -60,7 +62,7 @@ typedef enum Exception{
     Null
 } Exception;
 
-const char *Exceptions[] = {"InstructionAddressMisaligned",
+static const char *Exceptions[] = {"InstructionAddressMisaligned",
                                 "InstructionAccessFault", 
                                 "IllegalInstruction", 
                                 "Breakpoint", 
