@@ -30,7 +30,7 @@ u64 exception_code(Exception e){
             return 13;
         case StoreAMOPageFault:
             return 15;
-        case Null:
+        default:
             return -1;
     }
 }
