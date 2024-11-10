@@ -38,3 +38,40 @@
 #define STVAL 0x143 // Supervisor bad address or instruction
 #define SIP 0x144 // Supervisor interrupt pending
 #define SATP 0x180 // Supervisor address translation and protection
+
+typedef enum Exception{
+    InstructionAddressMisaligned,
+    InstructionAccessFault,
+    IllegalInstruction,
+    Breakpoint,
+    LoadAddressMisaligned,
+    LoadAccessFault,
+    StoreAMOAddressMisaligned,
+    StoreAMOAccessFault,
+    EnvironmentCallFromUMode,
+    EnvironmentCallFromSMode,
+    EnvironmentCallFromMMode,
+    InstructionPageFault,
+    LoadPageFault,
+    StoreAMOPageFault
+} Exception;
+
+const char *Exceptions[] = {"InstructionAddressMisaligned",
+                                "InstructionAccessFault", 
+                                "IllegalInstruction", 
+                                "Breakpoint", 
+                                "LoadAddressMisaligned",
+                                "LoadAccessFault",
+                                "StoreAMOAddressMisaligned",
+                                "StoreAMOAccessFault",
+                                "EnvironmentCallFromUMode",
+                                "EnvironmentCallFromSMode",
+                                "EnvironmentCallFromMMode",
+                                "InstructionPageFault",
+                                "LoadPageFault",
+                                "StoreAMOPageFault"};
+
+typedef struct RESULT {
+    u64 value;
+    Exception exception;
+} Result;

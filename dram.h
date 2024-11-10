@@ -9,8 +9,8 @@ typedef struct DRAM{
 
 extern DRAM dram;
 
-u64 load(u64 addr, u64 size);
+Result load(u64 addr, u64 size);
 
-void store(u64 addr, u64 size, u64 val);
+Result store(u64 addr, u64 size, u64 val);
 
 #endif

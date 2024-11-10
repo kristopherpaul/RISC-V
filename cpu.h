@@ -39,7 +39,7 @@ void dump_regs();
 
 void dump_csrs();
 
-u32 fetch();
+Result fetch();
 
-void execute(inst ins);
+Result execute(inst ins);
 #endif

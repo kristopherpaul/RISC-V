@@ -45,10 +45,13 @@ inst decode(u32 ins){
     return cur_inst;
 }
 
-u32 fetch(){
+Result fetch(){
+    Result ret;
+    ret.exception = NULL;
     u32 ins = 0;
     if(cpu.pc < DRAM_BASE){
-        return ins;
+        ret.exception = InstructionAccessFault;
+        return ret;
     }
     for(int i = 0;i < 4;i++){
         ins |= dram.mem[cpu.pc-DRAM_BASE+i] << (i*8);
@@ -60,7 +63,8 @@ u32 fetch(){
     #ifdef LITTLE_ENDIAN
         ins = ((ins&0xff) << 24) | (((ins>>8)&0xff) << 16) | (((ins>>16)&0xff) << 8) | ((ins>>24)&0xff);
     #endif
-    return ins;
+    ret.value = ins;
+    return ret;
 }
 
 u64 load_csr(u64 addr){
@@ -99,7 +103,9 @@ void dump_csrs(){
     fprintf(stderr,"SSTATUS = %llu\nSTVEC = %llu\nSEPC = %llu\nSCAUSE = %llu\n",load_csr(SSTATUS),load_csr(STVEC),load_csr(SEPC),load_csr(SCAUSE));
 }
 
-void execute(inst ins){
+Result execute(inst ins){
+    Result ret;
+    ret.exception = NULL;
     cpu.reg[0] = 0;
     u64 addr;
     u64 val;
@@ -118,6 +124,8 @@ void execute(inst ins){
                         case 0x20: //sub
                             cpu.reg[ins.rd] = cpu.reg[ins.rs1] - cpu.reg[ins.rs2];
                             break;
+                        default:
+                            ret.exception = IllegalInstruction;
                     }
                     break;
                 case 0x1: //sll
@@ -140,6 +148,8 @@ void execute(inst ins){
                         case 0x20: //sra
                             cpu.reg[ins.rd] = (u64)((i64)cpu.reg[ins.rs1] >> shamt);
                             break;
+                        default:
+                            ret.exception = IllegalInstruction;
                     }
                     break;
                 case 0x6: //or
@@ -148,6 +158,8 @@ void execute(inst ins){
                 case 0x7: //and
                     cpu.reg[ins.rd] = cpu.reg[ins.rs1] & cpu.reg[ins.rs2];
                     break;
+                default:
+                    ret.exception = IllegalInstruction;
             }
             break;
         
@@ -166,6 +178,8 @@ void execute(inst ins){
                 case 0x3: //sd
                     store(addr, 64, cpu.reg[ins.rs2]);
                     break;
+                default:
+                    ret.exception = IllegalInstruction;
             }
             break;
         
@@ -193,7 +207,9 @@ void execute(inst ins){
                             break;
                         case 0x10: //srai
                             cpu.reg[ins.rd] = (u64)((i64)cpu.reg[ins.rs1] >> ins.shamt6);
-                            break;    
+                            break;   
+                        default:
+                            ret.exception = IllegalInstruction; 
                     }
                     break;
                 case 0x6: //ori
@@ -201,7 +217,9 @@ void execute(inst ins){
                     break;
                 case 0x7: //andi
                     cpu.reg[ins.rd] = cpu.reg[ins.rs1] & ins.imI;
-                    break;       
+                    break;    
+                default:
+                    ret.exception = IllegalInstruction;   
             }
             break;
         
@@ -209,29 +227,54 @@ void execute(inst ins){
             addr = cpu.reg[ins.rs1] + ins.imI;
             switch(ins.funct3){
                 case 0x0: //lb
-                    cpu.reg[ins.rd] = (u64)(i64)(i8)load(addr, 8);
+                    Result load_res = load(addr, 8);
+                    ret.exception = load_res.exception;
+                    cpu.reg[ins.rd] = (u64)(i64)(i8)load_res.value;
                     break;
                 case 0x1: //lh
-                    cpu.reg[ins.rd] = (u64)(i64)(i16)load(addr, 16);
+                    Result load_res = load(addr, 16);
+                    ret.exception = load_res.exception;
+                    cpu.reg[ins.rd] = (u64)(i64)(i16)load_res.value;
                     break;
                 case 0x2: //lw
-                    cpu.reg[ins.rd] = (u64)(i64)(i32)load(addr, 32);
+                    Result load_res = load(addr, 32);
+                    ret.exception = load_res.exception;
+                    cpu.reg[ins.rd] = (u64)(i64)(i32)load_res.value;
                     break;
                 case 0x3: //ld
-                    cpu.reg[ins.rd] = load(addr, 64);
+                    Result load_res = load(addr, 64);
+                    ret.exception = load_res.exception;
+                    cpu.reg[ins.rd] = load_res.value;
                     break;
                 case 0x4: //lbu
-                    cpu.reg[ins.rd] = load(addr, 8);
+                    Result load_res = load(addr, 8);
+                    ret.exception = load_res.exception;
+                    cpu.reg[ins.rd] = load_res.value;
                     break;
                 case 0x5: //lhu
-                    cpu.reg[ins.rd] = load(addr, 16);
+                    Result load_res = load(addr, 16);
+                    ret.exception = load_res.exception;
+                    cpu.reg[ins.rd] = load_res.value;
                     break;
                 case 0x6: //lwu
-                    cpu.reg[ins.rd] = load(addr, 32);
+                    Result load_res = load(addr, 32);
+                    ret.exception = load_res.exception;
+                    cpu.reg[ins.rd] = load_res.value;
                     break;
+                default:
+                    ret.exception = IllegalInstruction;
             }
             break;
         
+        case 0x0f: //fence
+            switch(ins.funct3){
+                case 0x0:
+                    break;
+                default:
+                    ret.exception = IllegalInstruction;
+            }
+            break;
+
         case 0x17: //auipc
             cpu.reg[ins.rd] = cpu.pc + ins.imU - 4;
             break;
@@ -252,8 +295,12 @@ void execute(inst ins){
                         case 0x20: //sraiw
                             cpu.reg[ins.rd] = (u64)(i64)((i32)cpu.reg[ins.rs1] >> ins.shamt5);
                             break;
+                        default:
+                            ret.exception = IllegalInstruction;
                     }
                     break;
+                default:
+                    ret.exception = IllegalInstruction;
             }
             break;
 
@@ -271,6 +318,8 @@ void execute(inst ins){
                         case 0x20: //subw
                             cpu.reg[ins.rd] = (u64)(i32)(cpu.reg[ins.rs1] - cpu.reg[ins.rs2]);
                             break;
+                        default:
+                            ret.exception = IllegalInstruction;
                     }
                     break;
                 case 0x1: //sllw
@@ -292,6 +341,8 @@ void execute(inst ins){
                         case 0x20: //sraw
                             cpu.reg[ins.rd] = (u64)((i32)cpu.reg[ins.rs1] >> (i32)cpu.reg[ins.rs2]);
                             break;
+                        default:
+                            ret.exception = IllegalInstruction;
                     }
                     break;
                 case 0x7:
@@ -304,8 +355,12 @@ void execute(inst ins){
                                 cpu.reg[ins.rd] = (u64)(i32)((u32)(cpu.reg[ins.rs1]) % (u32)(cpu.reg[ins.rs2]));
                             }
                             break;
+                        default:
+                            ret.exception = IllegalInstruction;
                     }
                     break;
+                default:
+                    ret.exception = IllegalInstruction;
             }
             break;
 
@@ -341,6 +396,8 @@ void execute(inst ins){
                         cpu.pc += ins.imB - 4;
                     }
                     break;
+                default:
+                    ret.exception = IllegalInstruction;
             }
             break;
         
@@ -359,6 +416,34 @@ void execute(inst ins){
             switch(ins.funct3){
                 case 0x0:
                     switch(ins.rs2){
+                        case 0x0:
+                            switch(ins.funct7){
+                                case 0x0: //ecall
+                                    switch(cpu.mode){
+                                        case User:
+                                            ret.exception = EnvironmentCallFromUMode;
+                                            break;
+                                        case Supervisor:
+                                            ret.exception = EnvironmentCallFromSMode;
+                                            break;
+                                        case Machine:
+                                            ret.exception = EnvironmentCallFromMMode;
+                                            break;
+                                    }
+                                    break;
+                                default:
+                                    ret.exception = IllegalInstruction;
+                            }
+                            break;
+                        case 0x1:
+                            switch(ins.funct7){
+                                case 0x0: //ebreak
+                                    ret.exception = Breakpoint;
+                                    break;
+                                default:
+                                    ret.exception = IllegalInstruction;
+                            }
+                            break;
                         case 0x2:
                             switch(ins.funct7){
                                 case 0x8: //sret
@@ -397,6 +482,8 @@ void execute(inst ins){
                                     store_csr(MSTATUS, load_csr(MSTATUS) | (1<<7));
                                     store_csr(MSTATUS, load_csr(MSTATUS) & !(0x3<<11));
                                     break;
+                                default:
+                                    ret.exception = IllegalInstruction;
                             }
                             break;
                         default:
@@ -404,8 +491,9 @@ void execute(inst ins){
                                 case 0x9:
                                     //sfence.vma
                                     break;
+                                default:
+                                    ret.exception = IllegalInstruction;
                             }
-                            break;
                     }
                     break;
                 case 0x1: //csrrw
@@ -437,6 +525,8 @@ void execute(inst ins){
                     store_csr(ins.csraddr, val & (!((u64)ins.rs1)));
                     cpu.reg[ins.rd] = val;
                     break;
+                default:
+                    ret.exception = IllegalInstruction;
             }
             break;
 
@@ -445,45 +535,73 @@ void execute(inst ins){
                 case 0x00:
                     switch(ins.funct3){
                         case 0x2: //amoadd.w
-                            val = load(cpu.reg[ins.rs1], 32) + cpu.reg[ins.rs2];
-                            store(cpu.reg[ins.rs1], 32, val);
+                            Result load_res = load(cpu.reg[ins.rs1], 32);
+                            ret.exception = load_res.exception;
+                            val = load_res.value + cpu.reg[ins.rs2];
+                            Result store_res = store(cpu.reg[ins.rs1], 32, val);
+                            if(ret.exception == NULL){
+                                ret.exception = store_res.exception;
+                            }
                             cpu.reg[ins.rd] = val;
                             break;
                         case 0x3: //amoadd.d
-                            val = load(cpu.reg[ins.rs1], 64) + cpu.reg[ins.rs2];
-                            store(cpu.reg[ins.rs1], 64, val);
+                            Result load_res = load(cpu.reg[ins.rs1], 64);
+                            ret.exception = load_res.exception;
+                            val = load_res.value + cpu.reg[ins.rs2];
+                            Result store_res = store(cpu.reg[ins.rs1], 64, val);
+                            if(ret.exception == NULL){
+                                ret.exception = store_res.exception;
+                            }
                             cpu.reg[ins.rd] = val;
                             break;
+                        default:
+                            ret.exception = IllegalInstruction;
                     }
                     break;
                 case 0x01:
                     switch(ins.funct3){
                         case 0x2: //amoswap.w
-                            val = load(cpu.reg[ins.rs1], 32);
-                            store(cpu.reg[ins.rs1], 32, cpu.reg[ins.rs2]);
+                            Result load_res = load(cpu.reg[ins.rs1], 32);
+                            ret.exception = load_res.exception;
+                            val = load_res.value;
+                            Result store_res = store(cpu.reg[ins.rs1], 32, cpu.reg[ins.rs2]);
+                            if(ret.exception == NULL){
+                                ret.exception = store_res.exception;
+                            }
                             cpu.reg[ins.rd] = val;
                             break;
                         case 0x3: //amoswap.d
-                            val = load(cpu.reg[ins.rs1], 64);
-                            store(cpu.reg[ins.rs1], 64, cpu.reg[ins.rs2]);
+                            Result load_res = load(cpu.reg[ins.rs1], 64);
+                            ret.exception = load_res.exception;
+                            val = load_res.value;
+                            Result store_res = store(cpu.reg[ins.rs1], 64, cpu.reg[ins.rs2]);
+                            if(ret.exception == NULL){
+                                ret.exception = store_res.exception;
+                            }
                             cpu.reg[ins.rd] = val;
                             break;
+                        default:
+                            ret.exception = IllegalInstruction;
                     }
                     break;
+                default:
+                    ret.exception = IllegalInstruction;
             }
             break;
 
         case 0x0:
-            dump_regs();
-            dump_csrs();
-            exit(0);
+            //dump_regs();
+            //dump_csrs();
+            //exit(0);
             break;
 
         default:
-            dump_regs();
-            dump_csrs();
-            fprintf(stderr, "ERROR: Operation hasn't been implemented yet!");
-            exit(-1);
+            ret.exception = IllegalInstruction;
+            //dump_regs();
+            //dump_csrs();
+            //fprintf(stderr, "ERROR: Operation hasn't been implemented yet!");
+            //exit(-1);
             break;
     }
+    return ret;
 }

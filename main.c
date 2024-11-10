@@ -1,6 +1,7 @@
 #include "cpu.h"
 #include "utils.h"
 #include "dram.h"
+#include "trap.h"
 
 //#define LITTLE_ENDIAN
 
@@ -26,9 +27,18 @@ int main(int argc, char* argv[]){
     initCPU();
     // fetch-decode-execute cycle
     while(cpu.pc < DRAM_BASE+DRAM_SIZE){
-        u32 cur_inst = fetch();
-        inst parsed_inst = decode(cur_inst);
+        Result cur_inst_res = fetch();
+        u32 cur_inst;
+        if(cur_inst_res.exception != NULL){
+            take_trap(cur_inst_res.exception);
+            if(is_fatal(cur_inst_res.exception)){
+                fprintf(stderr, "ERROR: %s", Exceptions[cur_inst_res.exception]);
+                break;
+            }
+        }
+        cur_inst = cur_inst_res.value;
         cpu.pc += 4;
+        inst parsed_inst = decode(cur_inst);
         // debug mode
         if(argc == 3 && argv[2][0] == '-' && argv[2][1] == 'd'){
             printf("-------------\n");
