@@ -30,6 +30,8 @@ u64 exception_code(Exception e){
             return 13;
         case StoreAMOPageFault:
             return 15;
+        case Null:
+            return -1;
     }
 }
 
@@ -47,7 +49,7 @@ void take_trap(Exception e){
     u32 except_pc = cpu.pc-4;
     Mode prev_mode = cpu.mode;
     u32 except_code = exception_code(e);
-    if((prev_mode <= Supervisor) && ((load_csr(MEDELEG) >> except_code) & 1 != 0)){
+    if((prev_mode <= Supervisor) && (((load_csr(MEDELEG) >> except_code)&1) != 0)){
         cpu.mode = Supervisor;
         cpu.pc = load_csr(STVEC) & !1;
         store_csr(SEPC, except_pc & !1);
