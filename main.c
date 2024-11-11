@@ -45,9 +45,9 @@ int main(int argc, char* argv[]){
         // debug mode
         if(argc == 3 && argv[2][0] == '-' && argv[2][1] == 'd'){
             printf("-------------\n");
-            printf("pc:%u\n",cpu.pc);
-            printf("inst:%u\n",cur_inst);
-            printf("opcode:%u | ",parsed_inst.opcode);
+            printf("pc:0x%x\n", cpu.pc);
+            printf("inst:0x%x\n",cur_inst);
+            printf("opcode:0x%x | ",parsed_inst.opcode);
             printf("rd:%u | ",parsed_inst.rd);
             printf("rs1:%u | ",parsed_inst.rs1);
             printf("rs2:%u\n",parsed_inst.rs2);
@@ -56,10 +56,10 @@ int main(int argc, char* argv[]){
             printf("imB:%d | ",parsed_inst.imB);
             printf("imU:%d | ",parsed_inst.imU);
             printf("imJ:%d\n",parsed_inst.imJ);
-            printf("funct3:%u | ",parsed_inst.funct3);
-            printf("funct7:%u | ",parsed_inst.funct7);
-            printf("shamt5:%u | ",parsed_inst.shamt5);
-            printf("shamt6:%u\n",parsed_inst.shamt6);
+            printf("funct3:0x%x | ",parsed_inst.funct3);
+            printf("funct7:0x%x | ",parsed_inst.funct7);
+            printf("shamt5:0x%x | ",parsed_inst.shamt5);
+            printf("shamt6:0x%x\n",parsed_inst.shamt6);
             dump_regs();
             char rep;
             scanf("%c",&rep);
@@ -69,7 +69,7 @@ int main(int argc, char* argv[]){
         if(exec_inst_res.exception != Null){
             take_trap(exec_inst_res.exception);
             if(is_fatal(exec_inst_res.exception)){
-                fprintf(stdout, "ERROR: %s\n", Exceptions[exec_inst_res.exception]);
+                fprintf(stderr, "ERROR: %s\n", Exceptions[exec_inst_res.exception]);
                 break;
             }
         }

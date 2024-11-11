@@ -9,17 +9,6 @@ void initCPU(){
     cpu.mode = Machine;
 }
 
-i32 sext32(u32 rest_num, u32 sign, u8 num_bits){
-    u32 val = 0;
-    for(u8 i = 0;i < num_bits;i++){
-        val <<= 1;
-        val |= sign&1;
-    }
-    val <<= (32-num_bits);
-    val |= rest_num;
-    return (i32)val;
-}
-
 inst decode(u32 ins){
     inst cur_inst;
     cur_inst.opcode = ins & 0x7f;
@@ -108,7 +97,7 @@ Result execute(inst ins){
     cpu.reg[0] = 0;
     u64 addr;
     u64 val;
-    Result load_res, store_res;
+    Result load_res = {.exception = Null, .value = 0}, store_res = {.exception = Null, .value = 0};
     u32 shamt = (u32)(u64)(cpu.reg[ins.rs2] & 0x3f);
     switch(ins.opcode){
         case 0x33: //R-type
@@ -145,6 +134,14 @@ Result execute(inst ins){
                         case 0x00: //srl
                             cpu.reg[ins.rd] = cpu.reg[ins.rs1] >> shamt;
                             break;
+                        case 0x01: //divu
+                            if(cpu.reg[ins.rs2] == 0){
+                                //divison by 0, set DZ csr flag
+                                cpu.reg[ins.rd] = 0xffffffffffffffff;
+                            }else{
+                                cpu.reg[ins.rd] = (u64)(cpu.reg[ins.rs1]/cpu.reg[ins.rs2]);
+                            }
+                            break;
                         case 0x20: //sra
                             cpu.reg[ins.rd] = (u64)((i64)cpu.reg[ins.rs1] >> shamt);
                             break;
@@ -152,11 +149,30 @@ Result execute(inst ins){
                             ret.exception = IllegalInstruction;
                     }
                     break;
-                case 0x6: //or
-                    cpu.reg[ins.rd] = cpu.reg[ins.rs1] | cpu.reg[ins.rs2];
+                case 0x6:
+                    switch (ins.funct7) {
+                        case 0x00: //or
+                            cpu.reg[ins.rd] = cpu.reg[ins.rs1] | cpu.reg[ins.rs2];
+                            break;
+                        default:
+                            ret.exception = IllegalInstruction;
+                            break;
+                    }
                     break;
-                case 0x7: //and
-                    cpu.reg[ins.rd] = cpu.reg[ins.rs1] & cpu.reg[ins.rs2];
+                case 0x7:
+                    switch (ins.funct7) {
+                        case 0x0: //and
+                            cpu.reg[ins.rd] = cpu.reg[ins.rs1] & cpu.reg[ins.rs2];
+                            break;
+                        case 0x1: //remu
+                            if(cpu.reg[ins.rs2] == 0){
+                                //divison by 0, set DZ csr flag
+                                cpu.reg[ins.rd] = cpu.reg[ins.rs1];
+                            }else{
+                                cpu.reg[ins.rd] = (u64)(cpu.reg[ins.rs1] % cpu.reg[ins.rs2]);
+                            }
+                            break;
+                    }
                     break;
                 default:
                     ret.exception = IllegalInstruction;
@@ -330,12 +346,13 @@ Result execute(inst ins){
                         case 0x00: //srlw
                             cpu.reg[ins.rd] = (u64)(i32)((u32)(cpu.reg[ins.rs1]) >> cpu.reg[ins.rs2]);
                             break;
-                        case 0x01: //divu
+                        case 0x01: //divuw
                             if(cpu.reg[ins.rs2] == 0){
                                 //divison by 0, set DZ csr flag
                                 cpu.reg[ins.rd] = 0xffffffffffffffff;
                             }else{
-                                cpu.reg[ins.rd] = cpu.reg[ins.rs1]/cpu.reg[ins.rs2];
+                                u32 temp = ((u32)cpu.reg[ins.rs1])/((u32)cpu.reg[ins.rs2]);
+                                cpu.reg[ins.rd] = sext64(temp, (temp>>31)&1, 32);
                             }
                             break;
                         case 0x20: //sraw
@@ -537,22 +554,22 @@ Result execute(inst ins){
                         case 0x2: //amoadd.w
                             load_res = load(cpu.reg[ins.rs1], 32);
                             ret.exception = load_res.exception;
-                            val = load_res.value + cpu.reg[ins.rs2];
+                            cpu.reg[ins.rd] = sext64(load_res.value, (load_res.value>>31)&1, 32);
+                            val = load_res.value + (u32) cpu.reg[ins.rs2];
                             store_res = store(cpu.reg[ins.rs1], 32, val);
                             if(ret.exception == Null){
                                 ret.exception = store_res.exception;
                             }
-                            cpu.reg[ins.rd] = val;
                             break;
                         case 0x3: //amoadd.d
                             load_res = load(cpu.reg[ins.rs1], 64);
                             ret.exception = load_res.exception;
+                            cpu.reg[ins.rd] = load_res.value;
                             val = load_res.value + cpu.reg[ins.rs2];
                             store_res = store(cpu.reg[ins.rs1], 64, val);
                             if(ret.exception == Null){
                                 ret.exception = store_res.exception;
                             }
-                            cpu.reg[ins.rd] = val;
                             break;
                         default:
                             ret.exception = IllegalInstruction;
@@ -563,22 +580,20 @@ Result execute(inst ins){
                         case 0x2: //amoswap.w
                             load_res = load(cpu.reg[ins.rs1], 32);
                             ret.exception = load_res.exception;
-                            val = load_res.value;
-                            store_res = store(cpu.reg[ins.rs1], 32, cpu.reg[ins.rs2]);
+                            store_res = store(cpu.reg[ins.rs1], 32, (u32) cpu.reg[ins.rs2]);
+                            cpu.reg[ins.rd] = sext64(load_res.value, (load_res.value>>31)&1, 32);
                             if(ret.exception == Null){
                                 ret.exception = store_res.exception;
                             }
-                            cpu.reg[ins.rd] = val;
                             break;
                         case 0x3: //amoswap.d
                             load_res = load(cpu.reg[ins.rs1], 64);
                             ret.exception = load_res.exception;
-                            val = load_res.value;
-                            store_res = store(cpu.reg[ins.rs1], 64, cpu.reg[ins.rs2]);
+                            store_res = store(cpu.reg[ins.rs1], 64, (u64) cpu.reg[ins.rs2]);
+                            cpu.reg[ins.rd] = (u64) load_res.value;
                             if(ret.exception == Null){
                                 ret.exception = store_res.exception;
                             }
-                            cpu.reg[ins.rd] = val;
                             break;
                         default:
                             ret.exception = IllegalInstruction;

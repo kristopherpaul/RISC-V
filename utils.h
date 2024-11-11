@@ -84,4 +84,26 @@ typedef struct RESULT {
     Exception exception;
 } Result;
 
+static i32 sext32(u32 rest_num, u32 sign, u8 num_bits){
+    u32 val = 0;
+    for(u8 i = 0;i < num_bits;i++){
+        val <<= 1;
+        val |= sign&1;
+    }
+    val <<= (32-num_bits);
+    val |= rest_num;
+    return (i32)val;
+}
+
+static i64 sext64(u64 rest_num, u64 sign, u8 num_bits){
+    u64 val = 0;
+    for(u8 i = 0;i < num_bits;i++){
+        val <<= 1;
+        val |= sign&1;
+    }
+    val <<= (64-num_bits);
+    val |= rest_num;
+    return (i64)val;
+}
+
 #endif
