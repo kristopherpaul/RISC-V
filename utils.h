@@ -43,6 +43,20 @@
 #define SIP 0x144 // Supervisor interrupt pending
 #define SATP 0x180 // Supervisor address translation and protection
 
+#define CLINT_BASE 0x20000000
+#define CLINT_SIZE 0x10000
+
+#define PLIC_BASE 0xc0000000
+#define PLIC_SIZE 0x4000000
+
+#define CLINT_MTIMECMP CLINT_BASE+0x4000
+#define CLINT_MTIME CLINT_BASE+0xbff8
+
+#define PLIC_PENDING PLIC_BASE+0x1000
+#define PLIC_SENABLE PLIC_BASE+0x2080
+#define PLIC_SPRIORITY PLIC_BASE+0x201000
+#define PLIC_SCLAIM PLIC_BASE+0x201004
+
 #ifndef UTILS_H
 #define UTILS_H
 

@@ -2,6 +2,8 @@
 #define DRAM_H
 
 #include "utils.h"
+#include "plic.h"
+#include "clint.h"
 
 typedef struct DRAM{
     u8 mem[DRAM_SIZE];

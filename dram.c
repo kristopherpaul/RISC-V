@@ -1,13 +1,21 @@
 #include "dram.h"
-#include "utils.h"
 
 DRAM dram;
 
 Result load(u64 addr, u64 size){
     Result ret;
     ret.exception = Null;
+    if(CLINT_BASE <= addr && addr < CLINT_BASE+CLINT_SIZE){
+        return load_clint(addr, size);
+    }else if(PLIC_BASE <= addr && addr < PLIC_BASE+PLIC_SIZE){
+        return load_plic(addr, size);
+    }else if(addr < DRAM_BASE){
+        ret.exception = LoadAccessFault;
+    }
     if(size != 8 && size != 16 && size != 32 && size != 64){
         ret.exception = LoadAccessFault;
+    }
+    if(ret.exception != Null){
         return ret;
     }
     int index = addr - DRAM_BASE;
@@ -22,8 +30,17 @@ Result load(u64 addr, u64 size){
 Result store(u64 addr, u64 size, u64 val){
     Result ret;
     ret.exception = Null;
+    if(CLINT_BASE <= addr && addr < CLINT_BASE+CLINT_SIZE){
+        return store_clint(addr, size, val);
+    }else if(PLIC_BASE <= addr && addr < PLIC_BASE+PLIC_SIZE){
+        return store_plic(addr, size, val);
+    }else if(addr < DRAM_BASE){
+        ret.exception = StoreAMOAccessFault;
+    }
     if(size != 8 && size != 16 && size != 32 && size != 64){
         ret.exception = StoreAMOAccessFault;
+    }
+    if(ret.exception != Null){
         return ret;
     }
     int index = addr - DRAM_BASE;
