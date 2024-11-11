@@ -17,6 +17,7 @@ void exec_cmd(char* cmd){
 }
 
 int main(int argc, char* argv[]) {
+    // run on custom tests
     if(argc == 1) {
         struct dirent *entry;
         DIR *dp = opendir("tests");
@@ -76,6 +77,7 @@ int main(int argc, char* argv[]) {
             return 1;
         }
     }
+    // run on riscv-tests from environment argv[1]
     else if(argc == 2) {
         struct dirent *entry;
         char dir[100] = "tests/";
@@ -114,21 +116,23 @@ int main(int argc, char* argv[]) {
                 FILE *file = fopen(file_path, "r");  // Open the file in read mode
 
                 char line[256];
-                int a0 = -1, pass = 1;  // Initialize a0_value to an invalid number
+                int gp = -1, a0 = -1, a7 = -1, pass = 1;  // Initialize a0_value to an invalid number
 
                 // Read the file line by line
                 while (fgets(line, sizeof(line), file)) {
-                    // Look for the line containing "x10 (a0)"
-                    if (strstr(line, "x10 (a0)"))
+                    if(strstr(line, "x3 (gp)"))
+                        sscanf(line, "x3 (gp) = %d", &gp);
+                    else if (strstr(line, "x10 (a0)"))
                         sscanf(line, "x10 (a0) = %d", &a0);  // Extract the value of a0
-                    else if(strstr(line, "ERROR: Operation hasn't been implemented yet!"))
+                    else if(strstr(line, "x17 (a7)"))
+                        sscanf(line, "x17 (a7) = %d", &a7);
+                    else if(strstr(line, "ERROR: "))
                         pass = 0;
                 }
-
                 fclose(file);
 
                 printf("Test Case %d [" ANSI_COLOR_BLUE "%s" ANSI_COLOR_RESET "]: ", tc, fname);
-                if (a0 == 0 && pass) {
+                if (strstr(entry->d_name, "-p-") && gp == 1 && a0 == 0 && a7 == 93 && pass) {
                     printf(ANSI_COLOR_GREEN "PASSED" ANSI_COLOR_RESET "\n");
                     char delcmd[1000] = "cd ";
                     strcat(delcmd, dir);
