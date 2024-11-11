@@ -27,17 +27,19 @@ int main(int argc, char* argv[]){
     initCPU();
     // fetch-decode-execute cycle
     while(cpu.pc < DRAM_BASE+DRAM_SIZE){
+        cpu.reg[0] = 0;
         Result cur_inst_res = fetch();
         u32 cur_inst;
         if(cur_inst_res.exception != Null){
             take_trap(cur_inst_res.exception);
             if(is_fatal(cur_inst_res.exception)){
-                fprintf(stderr, "ERROR: %s", Exceptions[cur_inst_res.exception]);
+                fprintf(stdout, "ERROR: %s\n", Exceptions[cur_inst_res.exception]);
                 break;
             }
         }
         cur_inst = cur_inst_res.value;
         cpu.pc += 4;
+        cpu.reg[0] = 0;
         inst parsed_inst = decode(cur_inst);
         // debug mode
         if(argc == 3 && argv[2][0] == '-' && argv[2][1] == 'd'){
@@ -61,8 +63,17 @@ int main(int argc, char* argv[]){
             char rep;
             scanf("%c",&rep);
         }
-        execute(parsed_inst);
+        cpu.reg[0] = 0;
+        Result exec_inst_res = execute(parsed_inst);
+        if(exec_inst_res.exception != Null){
+            take_trap(exec_inst_res.exception);
+            if(is_fatal(exec_inst_res.exception)){
+                fprintf(stdout, "ERROR: %s\n", Exceptions[exec_inst_res.exception]);
+                break;
+            }
+        }
     }
+    cpu.reg[0] = 0;
     dump_regs();
     dump_csrs();
     return 0;
