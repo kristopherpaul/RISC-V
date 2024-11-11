@@ -20,5 +20,4 @@ main:
     #Loading the unsigned byte
     lbu t5, 0(sp)
     addi sp, sp, 4
-     	
-  
+   jr ra

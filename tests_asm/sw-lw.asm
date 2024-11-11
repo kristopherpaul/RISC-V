@@ -20,5 +20,6 @@ main:
     
     # Performing add operation
     add t4, t2, t3       # t4 = 2
+    jr ra
 
    
