@@ -6,3 +6,4 @@ main:
 	addi t4, zero, 132
 	sltu t5, t3, t4
 	
+        jr ra

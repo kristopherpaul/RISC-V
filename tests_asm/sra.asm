@@ -6,3 +6,4 @@ main:
     addi t3, zero, -1024
     addi t4, zero, 3                     
     sra  t5, t3, t4                      
+    jr ra

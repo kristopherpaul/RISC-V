@@ -5,4 +5,5 @@ main:
 	ori  t3, t0, -1545
 	ori  t4, t0, 1545
 	andi t5, t0, -1645
-	andi t6, t0, 1645            
+	andi t6, t0, 1645 
+	jr ra           

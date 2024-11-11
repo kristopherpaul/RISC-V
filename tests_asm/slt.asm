@@ -5,3 +5,4 @@ main:
 	addi t3, zero, -60
 	addi t4, zero, -50
 	slt  t5, t3, t4
+	jr ra

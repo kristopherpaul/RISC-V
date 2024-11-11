@@ -15,3 +15,4 @@ main:
 
    #performing operations for sanity check   
    add t3, t1,t2      
+   jr ra

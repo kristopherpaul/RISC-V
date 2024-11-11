@@ -5,3 +5,4 @@ main:
 	addi t3, zero, -512
 	addi t4, zero, -365
 	xor  t5, t3, t4
+	jr ra

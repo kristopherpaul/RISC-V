@@ -18,3 +18,4 @@ add s3, zero, t1
 add s4, zero, t3
 sraiw s5, t2, 3
 sraiw s6, t4, 4
+jr ra
