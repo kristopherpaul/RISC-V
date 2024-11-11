@@ -26,7 +26,7 @@ int main(int argc, char* argv[]){
     loadROM(argv[1]);
     initCPU();
     // fetch-decode-execute cycle
-    while(cpu.pc < DRAM_BASE+DRAM_SIZE){
+    while(cpu.pc != 0){
         cpu.reg[0] = 0;
         Result cur_inst_res = fetch();
         u32 cur_inst;
@@ -36,6 +36,7 @@ int main(int argc, char* argv[]){
                 fprintf(stdout, "ERROR: %s\n", Exceptions[cur_inst_res.exception]);
                 break;
             }
+            cur_inst = 0;
         }
         cur_inst = cur_inst_res.value;
         cpu.pc += 4;
