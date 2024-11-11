@@ -30,3 +30,4 @@ main:
    #performing operations for sanity check   
    add t4, t1,t2       #t4 = 305442032
    add t5, t2, t3 	#t5 = 22256
+   jr ra

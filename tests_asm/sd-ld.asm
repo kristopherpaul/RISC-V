@@ -19,5 +19,6 @@ main:
 
     # Load the doubleword 
     ld t3, 0(sp)  
-    addi sp, sp, 8          
+    addi sp, sp, 8    
+    jr ra      
 

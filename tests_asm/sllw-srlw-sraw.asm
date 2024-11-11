@@ -31,3 +31,4 @@ sllw s7, t2, t1
 sllw s8, t2, t3
 sraw s9, s2, t3
 sraw s10, s2, t1
+jr ra

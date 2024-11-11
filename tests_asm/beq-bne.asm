@@ -36,4 +36,4 @@ main:
 	end:
 	addi s4, zero, 1
 	
-	
+	jr ra
