@@ -70,14 +70,6 @@ u8 is_fatal(Exception e){
     return 0;
 }
 
-void take_exception(Exception e){
-    take_trap(&e, false);
-}
-
-void take_interrupt(Interrupt i){
-    take_trap(&i, true);
-}
-
 void take_trap(void *e, bool interrupt){
     u32 trap_pc = cpu.pc-4;
     Mode prev_mode = cpu.mode;
@@ -146,4 +138,12 @@ void take_trap(void *e, bool interrupt){
         store_csr(MSTATUS, load_csr(MSTATUS) & !(1<<3));
         store_csr(MSTATUS, load_csr(MSTATUS) & !(0b11<<11));
     }
+}
+
+void take_exception(Exception e){
+    take_trap(&e, false);
+}
+
+void take_interrupt(Interrupt i){
+    take_trap(&i, true);
 }

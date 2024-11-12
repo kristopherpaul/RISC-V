@@ -58,6 +58,8 @@ Result check_pending_interrupt() {
             if(((cpu.csr[SSTATUS] >> 1) & 1) == 0)
                 return (Result){.interrupt=NullInterrupt};
             break;
+        default:
+            break;
     }
     Result ret = {.exception = NullException, .interrupt = NullInterrupt};
     int irq = 0;
