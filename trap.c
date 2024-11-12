@@ -83,7 +83,7 @@ void take_trap(void *e, bool interrupt){
     Mode prev_mode = cpu.mode;
     u32 code = trap_code(e, interrupt);
     if(interrupt){
-        code = (1<<63)|code;
+        code = ((u64)1<<63)|code;
     }
     if((prev_mode <= Supervisor) && (((load_csr(MEDELEG) >> code)&1) != 0)){
         cpu.mode = Supervisor;
