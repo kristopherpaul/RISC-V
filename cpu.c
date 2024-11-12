@@ -52,11 +52,11 @@ Result check_pending_interrupt() {
     switch(cpu.mode) {
         case Machine:
             if(((cpu.csr[MSTATUS] >> 3) & 1) == 0)
-                return (Result){.interrupt=NullInterrupt};
+                return (Result){.exception = NullException, .interrupt=NullInterrupt};
             break;
         case Supervisor:
             if(((cpu.csr[SSTATUS] >> 1) & 1) == 0)
-                return (Result){.interrupt=NullInterrupt};
+                return (Result){.exception = NullException, .interrupt=NullInterrupt};
             break;
         default:
             break;
@@ -106,7 +106,7 @@ Result check_pending_interrupt() {
             return (Result){.exception=NullException, .interrupt=SupervisorTimerInterrupt};
         }
         else
-            return (Result){.exception = NullException, .interrupt = NullInterrupt};
+            return (Result){.exception=NullException, .interrupt = NullInterrupt};
     }
     else
         return ret;
