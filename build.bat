@@ -1,1 +1,1 @@
-gcc main.c dram.c cpu.c trap.c -o main.exe
+gcc main.c dram.c cpu.c trap.c clint.c plic.c -o main.exe
