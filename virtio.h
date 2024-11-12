@@ -2,6 +2,7 @@
 #define VIRTIO_H
 
 #include "utils.h"
+#include "bus.h"
 
 typedef struct VIRTIO{
     u64 id;
