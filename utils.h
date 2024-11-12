@@ -126,6 +126,8 @@
 #define VIRTIO_QUEUE_NOTIFY VIRTIO_BASE + 0x050
 #define VIRTIO_STATUS VIRTIO_BASE + 0x070
 
+#define PAGE_SIZE 4096
+
 typedef enum Exception{
     InstructionAddressMisaligned,
     InstructionAccessFault,
