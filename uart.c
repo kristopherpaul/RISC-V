@@ -71,4 +71,5 @@ Result store_uart(u64 addr, u64 size, u64 val){
         uart.buffer[addr-UART_BASE] = (u8)val;
     }
     pthread_mutex_unlock(&uart.mutex);
+    return ret;
 }
