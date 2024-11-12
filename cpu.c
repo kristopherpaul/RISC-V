@@ -35,7 +35,7 @@ inst decode(u32 ins){
 
 Result fetch(){
     Result ret;
-    ret.exception = Null;
+    ret.exception = NullException;
     u32 ins = 0;
     if(cpu.pc < DRAM_BASE){
         ret.exception = InstructionAccessFault;
@@ -93,11 +93,11 @@ void dump_csrs(){
 
 Result execute(inst ins){
     Result ret;
-    ret.exception = Null;
+    ret.exception = NullException;
     cpu.reg[0] = 0;
     u64 addr;
     u64 val;
-    Result load_res = {.exception = Null, .value = 0}, store_res = {.exception = Null, .value = 0};
+    Result load_res = {.exception = NullException, .value = 0}, store_res = {.exception = NullException, .value = 0};
     u32 shamt = (u32)(u64)(cpu.reg[ins.rs2] & 0x3f);
     switch(ins.opcode){
         case 0x33: //R-type
@@ -558,7 +558,7 @@ Result execute(inst ins){
                             cpu.reg[ins.rd] = sext64(load_res.value, (load_res.value>>31)&1, 32);
                             val = load_res.value + (u32) cpu.reg[ins.rs2];
                             store_res = store(cpu.reg[ins.rs1], 32, val);
-                            if(ret.exception == Null){
+                            if(ret.exception == NullException){
                                 ret.exception = store_res.exception;
                             }
                             break;
@@ -568,7 +568,7 @@ Result execute(inst ins){
                             cpu.reg[ins.rd] = load_res.value;
                             val = load_res.value + cpu.reg[ins.rs2];
                             store_res = store(cpu.reg[ins.rs1], 64, val);
-                            if(ret.exception == Null){
+                            if(ret.exception == NullException){
                                 ret.exception = store_res.exception;
                             }
                             break;
@@ -583,7 +583,7 @@ Result execute(inst ins){
                             ret.exception = load_res.exception;
                             store_res = store(cpu.reg[ins.rs1], 32, (u32) cpu.reg[ins.rs2]);
                             cpu.reg[ins.rd] = sext64(load_res.value, (load_res.value>>31)&1, 32);
-                            if(ret.exception == Null){
+                            if(ret.exception == NullException){
                                 ret.exception = store_res.exception;
                             }
                             break;
@@ -592,7 +592,7 @@ Result execute(inst ins){
                             ret.exception = load_res.exception;
                             store_res = store(cpu.reg[ins.rs1], 64, (u64) cpu.reg[ins.rs2]);
                             cpu.reg[ins.rd] = (u64) load_res.value;
-                            if(ret.exception == Null){
+                            if(ret.exception == NullException){
                                 ret.exception = store_res.exception;
                             }
                             break;

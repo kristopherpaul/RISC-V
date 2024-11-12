@@ -37,7 +37,7 @@ void initUART(){
 
 Result load_uart(u64 addr, u64 size){
     Result ret;
-    ret.exception = Null;
+    ret.exception = NullException;
     if(size != 8){
         ret.exception = LoadAccessFault;
         return ret;
@@ -58,7 +58,7 @@ Result load_uart(u64 addr, u64 size){
 
 Result store_uart(u64 addr, u64 size, u64 val){
     Result ret;
-    ret.exception = Null;
+    ret.exception = NullException;
     if(size != 8){
         ret.exception = StoreAMOAccessFault;
         return ret;

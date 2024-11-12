@@ -30,7 +30,7 @@ int main(int argc, char* argv[]){
         cpu.reg[0] = 0;
         Result cur_inst_res = fetch();
         u32 cur_inst;
-        if(cur_inst_res.exception != Null){
+        if(cur_inst_res.exception != NullException){
             take_trap(cur_inst_res.exception);
             if(is_fatal(cur_inst_res.exception)){
                 fprintf(stdout, "ERROR: %s\n", Exceptions[cur_inst_res.exception]);
@@ -66,7 +66,7 @@ int main(int argc, char* argv[]){
         }
         cpu.reg[0] = 0;
         Result exec_inst_res = execute(parsed_inst);
-        if(exec_inst_res.exception != Null){
+        if(exec_inst_res.exception != NullException){
             take_trap(exec_inst_res.exception);
             if(is_fatal(exec_inst_res.exception)){
                 fprintf(stderr, "ERROR: %s\n", Exceptions[exec_inst_res.exception]);

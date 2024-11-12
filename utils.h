@@ -88,7 +88,7 @@ typedef enum Exception{
     InstructionPageFault,
     LoadPageFault,
     StoreAMOPageFault,
-    Null
+    NullException
 } Exception;
 
 static const char *Exceptions[] = {"InstructionAddressMisaligned",
@@ -110,6 +110,29 @@ typedef struct RESULT {
     u64 value;
     Exception exception;
 } Result;
+
+typedef enum Interrupt{
+    UserSoftwareInterrupt,
+    SupervisorSoftwareInterrupt,
+    MachineSoftwareInterrupt,
+    UserTimerInterrupt,
+    SupervisorTimerInterrupt,
+    MachineTimerInterrupt,
+    UserExternalInterrupt,
+    SupervisorExternalInterrupt,
+    MachineExternalInterrupt,
+    NullInterrupt
+} Interrupt;
+
+static const char *Interrupts[] = {"UserSoftwareInterrupt",
+                                "SupervisorSoftwareInterrupt", 
+                                "MachineSoftwareInterrupt", 
+                                "UserTimerInterrupt", 
+                                "SupervisorTimerInterrupt",
+                                "MachineTimerInterrupt",
+                                "UserExternalInterrupt",
+                                "SupervisorExternalInterrupt",
+                                "MachineExternalInterrupt"};
 
 static i32 sext32(u32 rest_num, u32 sign, u8 num_bits){
     u32 val = 0;

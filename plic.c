@@ -4,7 +4,7 @@ PLIC plic;
 
 Result load_plic(u64 addr, u64 size){
     Result ret;
-    ret.exception = Null;
+    ret.exception = NullException;
     if(size != 32){
         ret.exception = LoadAccessFault;
         return ret;
@@ -32,7 +32,7 @@ Result load_plic(u64 addr, u64 size){
 
 Result store_plic(u64 addr, u64 size, u64 val){
     Result ret;
-    ret.exception = Null;
+    ret.exception = NullException;
     if(size != 32){
         ret.exception = StoreAMOAccessFault;
         return ret;
