@@ -26,7 +26,7 @@ int main(int argc, char* argv[]){
     loadROM(argv[1]);
     initCPU();
     // fetch-decode-execute cycle
-    while(1){
+    while(cpu.pc != 0){
         cpu.reg[0] = 0;
         Result cur_inst_res = fetch();
         u32 cur_inst;
