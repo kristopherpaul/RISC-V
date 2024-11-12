@@ -115,22 +115,22 @@ void virtio_disk_access(){
     u64 a_addr = desc_addr()+0x40;
     u64 u_addr = desc_addr()+4096;
     
-    u16 offset = load(a_addr+1, 16);
-    u16 index = load(a_addr+(offset%DESC_NUM)+2, 16);
+    u16 offset = load(a_addr+1, 16).value;
+    u16 index = load(a_addr+(offset%DESC_NUM)+2, 16).value;
 
     u64 d_addr0 = d_addr + VRING_DESC_SIZE*index;
-    u64 addr0 = load(d_addr0, 64);
-    u16 next0 = load(d_addr0+14, 16);
+    u64 addr0 = load(d_addr0, 64).value;
+    u16 next0 = load(d_addr0+14, 16).value;
 
     u64 d_addr1 = d_addr + VRING_DESC_SIZE*next0;
-    u64 addr1 = load(d_addr1, 64);
-    u32 len1 = load(d_addr1+8, 32);
-    u16 flags1 = load(d_addr1+12, 16);
+    u64 addr1 = load(d_addr1, 64).value;
+    u32 len1 = load(d_addr1+8, 32).value;
+    u16 flags1 = load(d_addr1+12, 16).value;
 
-    u64 blk_sector = load(addr0+8, 64);
+    u64 blk_sector = load(addr0+8, 64).value;
     if((flags1&2) == 0){
         for(int i = 0;i < len1;i++){
-            write_disk(blk_sector*512+i, load(addr1+i, 8));
+            write_disk(blk_sector*512+i, load(addr1+i, 8).value);
         }
     }else{
         for(int i = 0;i < len1;i++){
