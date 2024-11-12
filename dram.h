@@ -2,9 +2,6 @@
 #define DRAM_H
 
 #include "utils.h"
-#include "plic.h"
-#include "clint.h"
-#include "uart.h"
 
 typedef struct DRAM{
     u8 mem[DRAM_SIZE];
@@ -12,8 +9,8 @@ typedef struct DRAM{
 
 extern DRAM dram;
 
-Result load(u64 addr, u64 size);
+Result load_dram(u64 addr, u64 size);
 
-Result store(u64 addr, u64 size, u64 val);
+Result store_dram(u64 addr, u64 size, u64 val);
 
 #endif
