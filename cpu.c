@@ -282,9 +282,10 @@ Result execute(inst ins){
             }
             break;
         
-        case 0x0f: //fence
+        case 0x0f:
             switch(ins.funct3){
-                case 0x0:
+                case 0x0: // fence
+                case 0x1: // fence.i
                     break;
                 default:
                     ret.exception = IllegalInstruction;
