@@ -37,7 +37,7 @@ jobs:
       run: make test
       shell: msys2 {0}
 
-    - name: Run user tests
+    - name: Run user mode tests
       run: make test rv64u
       shell: msys2 {0}
 
