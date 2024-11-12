@@ -24,6 +24,8 @@ typedef struct CPU {
     u64 csr[4096];
     u32 pc;
     Mode mode;
+    bool paging;
+    u64 page_table;
 } CPU;
 
 extern CPU cpu;  
@@ -41,6 +43,8 @@ void dump_regs();
 void dump_csrs();
 
 Result check_pending_interrupt();
+
+Result translate(u64 addr, Access access);
 
 Result fetch();
 

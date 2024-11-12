@@ -1,6 +1,11 @@
 #include "bus.h"
 
 Result load(u64 addr, u64 size) {
+    Result trans_res = translate(addr, Load);
+    if(trans_res.exception != NullException){
+        return trans_res;
+    }
+    addr = trans_res.value;
     if(CLINT_BASE <= addr && addr < CLINT_BASE+CLINT_SIZE)
         return load_clint(addr, size);
     else if(PLIC_BASE <= addr && addr < PLIC_BASE+PLIC_SIZE)
@@ -16,6 +21,11 @@ Result load(u64 addr, u64 size) {
 }
 
 Result store(u64 addr, u64 size, u64 val) {
+    Result trans_res = translate(addr, Store);
+    if(trans_res.exception != NullException){
+        return trans_res;
+    }
+    addr = trans_res.value;
     if(CLINT_BASE <= addr && addr < CLINT_BASE+CLINT_SIZE)
         return store_clint(addr, size, val);
     else if(PLIC_BASE <= addr && addr < PLIC_BASE+PLIC_SIZE)

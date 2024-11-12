@@ -2,6 +2,7 @@
 #define BUS_H
 
 #include "utils.h"
+#include "cpu.h"
 #include "clint.h"
 #include "dram.h"
 #include "plic.h"

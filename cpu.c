@@ -46,9 +46,6 @@ void dump_csrs(){
 }
 
 Result check_pending_interrupt() {
-    // 3.1.6.1 Privilege and Global Interrupt-Enable Stack in mstatus register
-    // "When a hart is executing in privilege mode x, interrupts are globally enabled when x
-    // IE=1 and globally disabled when x IE=0."
     switch(cpu.mode) {
         case Machine:
             if(((cpu.csr[MSTATUS] >> 3) & 1) == 0)
@@ -77,13 +74,6 @@ Result check_pending_interrupt() {
         store_csr(MIP, load_csr(MIP) | MIP_SEIP);
     }
 
-    // "An interrupt i will be taken if bit i is set in both mip and mie, and if interrupts are globally enabled.
-    // By default, M-mode interrupts are globally enabled if the hart’s current privilege mode is less than
-    // M, or if the current privilege mode is M and the MIE bit in the mstatus register is set. If bit i
-    // in mideleg is set, however, interrupts are considered to be globally enabled if the hart’s current
-    // privilege mode equals the delegated privilege mode (S or U) and that mode’s interrupt enable bit
-    // (SIE or UIE in mstatus) is set, or if the current privilege mode is less than the delegated privilege
-    // mode."
     if(ret.exception != NullException) {
         u64 pending = load_csr(MIE) & load_csr(MIP);
         if(pending & MIP_MEIP) {
@@ -117,6 +107,105 @@ Result check_pending_interrupt() {
         return ret;
 }
 
+void update_paging(u64 addr){
+    if(addr != SATP){
+        return;
+    }
+    cpu.page_table = (load_csr(SATP)&(((u64)1<<44)-1)) * PAGE_SIZE;
+    u64 mode = load_csr(SATP)>>60;
+    if(mode == 8){
+        cpu.paging = true;
+    }else{
+        cpu.paging = false;
+    }
+}
+
+Result translate(u64 addr, Access access){
+    Result ret;
+    ret.exception = NullException;
+    if(!cpu.paging){
+        ret.value = addr;
+        return ret;
+    }
+    u64 levels = 3;
+    u64 vpn[3] = {(addr>>12) & 0x1ff, (addr>>21) & 0x1ff, (addr>>30) & 0x1ff};
+    u64 a = cpu.page_table;
+    i64 i = levels-1;
+    u64 pte;
+    while(1){
+        pte = load(a+vpn[i]*8, 64).value;
+        u64 v = pte&1;
+        u64 r = (pte>>1)&1;
+        u64 w = (pte>>2)&1;
+        u64 x = (pte>>3)&1;
+        if((v == 0) || (r == 0 && w == 1)){
+            switch(access){
+                case Instruction:
+                    ret.exception = InstructionPageFault;
+                    break;
+                case Load:
+                    ret.exception = LoadPageFault;
+                    break;
+                case Store:
+                    ret.exception = StoreAMOPageFault;
+                    break;
+            }
+            break;
+        }
+        if(r == 1 || x == 1){
+            break;
+        }
+        i--;
+        u64 ppn = (pte>>10) & 0x0fffffffffff;
+        a = ppn*PAGE_SIZE;
+        if(i < 0){
+            switch(access){
+                case Instruction:
+                    ret.exception = InstructionPageFault;
+                    break;
+                case Load:
+                    ret.exception = LoadPageFault;
+                    break;
+                case Store:
+                    ret.exception = StoreAMOPageFault;
+                    break;
+            }
+            break;
+        }
+    }
+    if(ret.exception != NullException){
+        return ret;
+    }
+    u64 ppn[3] = {(pte>>10)&0x1ff, (pte>>19)&0x1ff, (pte>>28)&0x03ffffff};
+    u64 offset = addr&0xfff;
+    switch(i){
+        case 0:
+            u64 _ppn = (pte >> 10) & 0x0fffffffffff;
+            ret.value = (_ppn<<12)|offset;
+            break;
+        case 1:
+            ret.value = (ppn[2]<<30) | (ppn[1]<<21) | (vpn[0]<<12) | offset;
+            break;
+        case 2:
+            ret.value = (ppn[2]<<30) | (vpn[1]<<21) | (vpn[0]<<12) | offset;
+            break;
+        default:
+            switch(access){
+                case Instruction:
+                    ret.exception = InstructionPageFault;
+                    break;
+                case Load:
+                    ret.exception = LoadPageFault;
+                    break;
+                case Store:
+                    ret.exception = StoreAMOPageFault;
+                    break;
+            }
+            break;
+    }
+    return ret;
+}
+
 inst decode(u32 ins){
     inst cur_inst;
     cur_inst.opcode = ins & 0x7f;
@@ -144,13 +233,18 @@ inst decode(u32 ins){
 Result fetch(){
     Result ret;
     ret.exception = NullException;
+    Result trans_res = translate(cpu.pc, Instruction);
+    if(trans_res.exception != NullException){
+        return trans_res;
+    }
+    u64 rpc = trans_res.value;
     u32 ins = 0;
-    if(cpu.pc < DRAM_BASE){
+    if(rpc < DRAM_BASE){
         ret.exception = InstructionAccessFault;
         return ret;
     }
     for(int i = 0;i < 4;i++){
-        ins |= dram.mem[cpu.pc-DRAM_BASE+i] << (i*8);
+        ins |= dram.mem[rpc-DRAM_BASE+i] << (i*8);
     }
     /*if(ins == 0){
         fprintf(stderr, "ERROR: Instruction couldn't be fetched!");
@@ -590,30 +684,36 @@ Result execute(inst ins){
                     val = load_csr(ins.csraddr);
                     store_csr(ins.csraddr, cpu.reg[ins.rs1]);
                     cpu.reg[ins.rd] = val;
+                    update_paging(ins.csraddr);
                     break;
                 case 0x2: //csrrs
                     val = load_csr(ins.csraddr);
                     store_csr(ins.csraddr, val | cpu.reg[ins.rs1]);
                     cpu.reg[ins.rd] = val;
+                    update_paging(ins.csraddr);
                     break;
                 case 0x3: //csrrc
                     val = load_csr(ins.csraddr);
                     store_csr(ins.csraddr, val & (!cpu.reg[ins.rs1]));
                     cpu.reg[ins.rd] = val;
+                    update_paging(ins.csraddr);
                     break;
                 case 0x5: //csrrwi
                     cpu.reg[ins.rd] = load_csr(ins.csraddr);
                     store_csr(ins.csraddr, (u64)ins.rs1);
+                    update_paging(ins.csraddr);
                     break;
                 case 0x6: //csrrsi
                     val = load_csr(ins.csraddr);
                     store_csr(ins.csraddr, val | ((u64)ins.rs1));
                     cpu.reg[ins.rd] = val;
+                    update_paging(ins.csraddr);
                     break;
                 case 0x7: //csrrci
                     val = load_csr(ins.csraddr);
                     store_csr(ins.csraddr, val & (!((u64)ins.rs1)));
                     cpu.reg[ins.rd] = val;
+                    update_paging(ins.csraddr);
                     break;
                 default:
                     ret.exception = IllegalInstruction;
