@@ -2,7 +2,7 @@
 
 VIRTIO virtio;
 
-void initVIRTIO(u8 disk_image[]){
+void initVIRTIO(){
     virtio.queue_notify = 9999;
 }
 

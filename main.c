@@ -40,7 +40,7 @@ int main(int argc, char* argv[]){
         memset(virtio.disk, 0, VIRTIO_SIZE);
     initCPU();
     initUART();
-    initVIRTIO(virtio.disk);
+    initVIRTIO();
     // fetch-decode-execute cycle
     while(cpu.pc != 0){
         cpu.reg[0] = 0;

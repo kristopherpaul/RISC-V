@@ -17,7 +17,7 @@ typedef struct VIRTIO{
 
 extern VIRTIO virtio;
 
-void initVIRTIO(u8 disk_image[]);
+void initVIRTIO();
 
 bool is_virtio_interrupting();
 
