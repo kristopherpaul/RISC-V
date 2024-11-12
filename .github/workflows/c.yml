@@ -33,8 +33,12 @@ jobs:
       run: make
       shell: msys2 {0}
 
-    - name: Run tests
+    - name: Run user tests
       run: make test
+      shell: msys2 {0}
+
+    - name: Run user mode tests
+      run: make test rv64u
       shell: msys2 {0}
 
     - name: Clean up
