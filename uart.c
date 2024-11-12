@@ -14,7 +14,7 @@ void* uart_input_thread(void* arg){
                 pthread_cond_wait(&uart_obj->cond, &uart_obj->mutex);
             }
             uart_obj->buffer[UART_RHR - UART_BASE] = byte;
-            uart_obj->interrupting = true;
+            atomic_store_explicit(&uart_obj->interrupting, true, memory_order_release);
             uart_obj->buffer[UART_LSR - UART_BASE] |= UART_LSR_RX; // Set RX bit
             pthread_mutex_unlock(&uart_obj->mutex);
         }
@@ -33,6 +33,10 @@ void initUART(){
     if(pthread_create(&thread, NULL, uart_input_thread, (void*)&uart) != 0){
         fprintf(stderr, "Failed to create UART input thread");
     }
+}
+
+bool is_uart_interrupting() {
+    return atomic_exchange_explicit(&uart.interrupting, false, memory_order_acquire);
 }
 
 Result load_uart(u64 addr, u64 size){

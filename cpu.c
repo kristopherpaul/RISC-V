@@ -9,6 +9,105 @@ void initCPU(){
     cpu.mode = Machine;
 }
 
+u64 load_csr(u64 addr){
+    switch(addr){
+        case SIE:
+            return cpu.csr[MIE] & cpu.csr[MIDELEG];
+
+        default:
+            return cpu.csr[addr];
+    }
+}
+
+void store_csr(u64 addr, u64 val){
+    switch(addr){
+        case SIE:
+            cpu.csr[MIE] = (cpu.csr[MIE] & !cpu.csr[MIDELEG]) | (val & cpu.csr[MIDELEG]);
+            break;
+
+        default:
+            cpu.csr[addr] = val;
+            break;
+    }
+}
+
+void dump_regs(){
+    char* reg_names[] = {"zero", "ra", "sp", "gp", "tp", "t0", "t1", "t2", "s0", "s1", "a0",
+                         "a1", "a2", "a3", "a4", "a5", "a6", "a7", "s2", "s3", "s4", "s5",
+                         "s6", "s7", "s8", "s9", "s10", "s11", "t3", "t4", "t5", "t6"};
+    for(int i = 0;i < 32;i++){
+        fprintf(stderr,"x%d (%s) = %llu, %lld\n",i,reg_names[i],cpu.reg[i],cpu.reg[i]);
+    }
+}
+
+void dump_csrs(){
+    fprintf(stderr,"MSTATUS = %llu\nMTVEC = %llu\nMEPC = %llu\nMCAUSE = %llu\n",load_csr(MSTATUS),load_csr(MTVEC),load_csr(MEPC),load_csr(MCAUSE));
+    fprintf(stderr,"SSTATUS = %llu\nSTVEC = %llu\nSEPC = %llu\nSCAUSE = %llu\n",load_csr(SSTATUS),load_csr(STVEC),load_csr(SEPC),load_csr(SCAUSE));
+}
+
+Result check_pending_interrupt() {
+    // 3.1.6.1 Privilege and Global Interrupt-Enable Stack in mstatus register
+    // "When a hart is executing in privilege mode x, interrupts are globally enabled when x
+    // IE=1 and globally disabled when x IE=0."
+    switch(cpu.mode) {
+        case Machine:
+            if(((cpu.csr[MSTATUS] >> 3) & 1) == 0)
+                return (Result){.interrupt=NullInterrupt};
+            break;
+        case Supervisor:
+            if(((cpu.csr[SSTATUS] >> 1) & 1) == 0)
+                return (Result){.interrupt=NullInterrupt};
+            break;
+    }
+    Result ret;
+    int irq = 0;
+    // Check external interrupt for uart.
+    if(is_uart_interrupting())
+        irq = UART_IRQ;
+
+    if(irq) {
+        ret = store(PLIC_SCLAIM, 32, irq);
+        store_csr(MIP, load_csr(MIP) | MIP_SEIP);
+    }
+
+    // "An interrupt i will be taken if bit i is set in both mip and mie, and if interrupts are globally enabled.
+    // By default, M-mode interrupts are globally enabled if the hart’s current privilege mode is less than
+    // M, or if the current privilege mode is M and the MIE bit in the mstatus register is set. If bit i
+    // in mideleg is set, however, interrupts are considered to be globally enabled if the hart’s current
+    // privilege mode equals the delegated privilege mode (S or U) and that mode’s interrupt enable bit
+    // (SIE or UIE in mstatus) is set, or if the current privilege mode is less than the delegated privilege
+    // mode."
+    if(ret.exception != NullException) {
+        u64 pending = load_csr(MIE) & load_csr(MIP);
+        if(pending & MIP_MEIP) {
+            store_csr(MIP, load_csr(MIP) & (~MIP_MEIP));
+            return (Result){.exception=NullException, .interrupt=MachineExternalInterrupt};
+        }
+        if(pending & MIP_MSIP) {
+            store_csr(MIP, load_csr(MIP) & (~MIP_MSIP));
+            return (Result){.exception=NullException, .interrupt=MachineSoftwareInterrupt};
+        }
+        if(pending & MIP_MTIP) {
+            store_csr(MIP, load_csr(MIP) & (~MIP_MTIP));
+            return (Result){.exception=NullException, .interrupt=MachineTimerInterrupt};
+        }
+        if(pending & MIP_SEIP) {
+            store_csr(MIP, load_csr(MIP) & (~MIP_SEIP));
+            return (Result){.exception=NullException, .interrupt=SupervisorExternalInterrupt};
+        }
+        if(pending & MIP_SSIP) {
+            store_csr(MIP, load_csr(MIP) & (~MIP_SSIP));
+            return (Result){.exception=NullException, .interrupt=SupervisorSoftwareInterrupt};
+        }
+        if(pending & MIP_STIP) {
+            store_csr(MIP, load_csr(MIP) & (~MIP_STIP));
+            return (Result){.exception=NullException, .interrupt=SupervisorTimerInterrupt};
+        }
+    }
+    else
+        return ret;
+}
+
 inst decode(u32 ins){
     inst cur_inst;
     cur_inst.opcode = ins & 0x7f;
@@ -55,49 +154,13 @@ Result fetch(){
     return ret;
 }
 
-u64 load_csr(u64 addr){
-    switch(addr){
-        case SIE:
-            return cpu.csr[MIE] & cpu.csr[MIDELEG]; 
-        
-        default:
-            return cpu.csr[addr];
-    }
-}
-
-void store_csr(u64 addr, u64 val){
-    switch(addr){
-        case SIE:
-            cpu.csr[MIE] = (cpu.csr[MIE] & !cpu.csr[MIDELEG]) | (val & cpu.csr[MIDELEG]); 
-            break;
-        
-        default:
-            cpu.csr[addr] = val;
-            break;
-    }
-}
-
-void dump_regs(){
-    char* reg_names[] = {"zero", "ra", "sp", "gp", "tp", "t0", "t1", "t2", "s0", "s1", "a0",
-                        "a1", "a2", "a3", "a4", "a5", "a6", "a7", "s2", "s3", "s4", "s5",
-                        "s6", "s7", "s8", "s9", "s10", "s11", "t3", "t4", "t5", "t6"};
-    for(int i = 0;i < 32;i++){
-        fprintf(stderr,"x%d (%s) = %llu, %lld\n",i,reg_names[i],cpu.reg[i],cpu.reg[i]);
-    }
-}
-
-void dump_csrs(){
-    fprintf(stderr,"MSTATUS = %llu\nMTVEC = %llu\nMEPC = %llu\nMCAUSE = %llu\n",load_csr(MSTATUS),load_csr(MTVEC),load_csr(MEPC),load_csr(MCAUSE));
-    fprintf(stderr,"SSTATUS = %llu\nSTVEC = %llu\nSEPC = %llu\nSCAUSE = %llu\n",load_csr(SSTATUS),load_csr(STVEC),load_csr(SEPC),load_csr(SCAUSE));
-}
-
 Result execute(inst ins){
     Result ret;
     ret.exception = NullException;
     cpu.reg[0] = 0;
     u64 addr;
     u64 val;
-    Result load_res = {.exception = NullException, .value = 0}, store_res = {.exception = NullException, .value = 0};
+    Result load_res = {.exception = NullException, .interrupt = NullInterrupt, .value = 0}, store_res = {.exception = NullException, .interrupt = NullInterrupt, .value = 0};
     u32 shamt = (u32)(u64)(cpu.reg[ins.rs2] & 0x3f);
     switch(ins.opcode){
         case 0x33: //R-type

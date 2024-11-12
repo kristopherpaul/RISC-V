@@ -4,6 +4,7 @@
 #include<stdbool.h>
 #include<string.h>
 #include<pthread.h>
+#include<stdatomic.h>
 #include<unistd.h>
 
 #pragma GCC diagnostic warning "-Wunused"
@@ -69,9 +70,17 @@
 
 #define UART_LSR_RX (1 << 0) // Receiver ready
 #define UART_LSR_TX (1 << 5) // Transmitter empty
+#define UART_IRQ 10 // Interrupt Request of UART
 
 #ifndef UTILS_H
 #define UTILS_H
+
+#define MIP_SSIP (1 << 1)
+#define MIP_MSIP (1 << 3)
+#define MIP_STIP (1 << 5)
+#define MIP_MTIP (1 << 7)
+#define MIP_SEIP (1 << 9)
+#define MIP_MEIP (1 << 11)
 
 typedef enum Exception{
     InstructionAddressMisaligned,
@@ -106,11 +115,6 @@ static const char *Exceptions[] = {"InstructionAddressMisaligned",
                                 "LoadPageFault",
                                 "StoreAMOPageFault"};
 
-typedef struct RESULT {
-    u64 value;
-    Exception exception;
-} Result;
-
 typedef enum Interrupt{
     UserSoftwareInterrupt,
     SupervisorSoftwareInterrupt,
@@ -125,14 +129,20 @@ typedef enum Interrupt{
 } Interrupt;
 
 static const char *Interrupts[] = {"UserSoftwareInterrupt",
-                                "SupervisorSoftwareInterrupt", 
-                                "MachineSoftwareInterrupt", 
-                                "UserTimerInterrupt", 
-                                "SupervisorTimerInterrupt",
-                                "MachineTimerInterrupt",
-                                "UserExternalInterrupt",
-                                "SupervisorExternalInterrupt",
-                                "MachineExternalInterrupt"};
+                                   "SupervisorSoftwareInterrupt",
+                                   "MachineSoftwareInterrupt",
+                                   "UserTimerInterrupt",
+                                   "SupervisorTimerInterrupt",
+                                   "MachineTimerInterrupt",
+                                   "UserExternalInterrupt",
+                                   "SupervisorExternalInterrupt",
+                                   "MachineExternalInterrupt"};
+
+typedef struct RESULT {
+    u64 value;
+    Exception exception;
+    Interrupt interrupt;
+} Result;
 
 static i32 sext32(u32 rest_num, u32 sign, u8 num_bits){
     u32 val = 0;
