@@ -1,6 +1,9 @@
 #include<stdio.h>
 #include<stdint.h>
 #include<stdlib.h>
+#include<stdbool.h>
+#include<pthread.h>
+//#include<unistd.h>
 
 #pragma GCC diagnostic warning "-Wunused"
 
@@ -15,8 +18,6 @@
 
 #define DRAM_SIZE 1024 * 1024 * 128
 #define DRAM_BASE 0x80000000
-#define UART_BASE 0x10000000
-#define UART_SIZE 0x100
 
 // Machine-level CSRs
 #define MHARTID 0xf14 // Hardware thread ID
@@ -43,10 +44,10 @@
 #define SIP 0x144 // Supervisor interrupt pending
 #define SATP 0x180 // Supervisor address translation and protection
 
-#define CLINT_BASE 0x20000000
+#define CLINT_BASE 0x2000000
 #define CLINT_SIZE 0x10000
 
-#define PLIC_BASE 0xc0000000
+#define PLIC_BASE 0xc000000
 #define PLIC_SIZE 0x4000000
 
 #define CLINT_MTIMECMP CLINT_BASE+0x4000
@@ -56,6 +57,17 @@
 #define PLIC_SENABLE PLIC_BASE+0x2080
 #define PLIC_SPRIORITY PLIC_BASE+0x201000
 #define PLIC_SCLAIM PLIC_BASE+0x201004
+
+#define UART_BASE 0x10000000
+#define UART_SIZE 0x100
+
+#define UART_RHR (UART_BASE + 0) // Receive holding register
+#define UART_THR (UART_BASE + 0) // Transmit holding register
+#define UART_LCR (UART_BASE + 3) // Line control register
+#define UART_LSR (UART_BASE + 5) // Line status register
+
+#define UART_LSR_RX (1 << 0) // Receiver ready
+#define UART_LSR_TX (1 << 5) // Transmitter empty
 
 #ifndef UTILS_H
 #define UTILS_H
