@@ -9,6 +9,8 @@ Result load(u64 addr, u64 size){
         return load_clint(addr, size);
     }else if(PLIC_BASE <= addr && addr < PLIC_BASE+PLIC_SIZE){
         return load_plic(addr, size);
+    }else if(UART_BASE <= addr && addr < UART_BASE+UART_SIZE){
+        return load_uart(addr, size);
     }else if(addr < DRAM_BASE){
         ret.exception = LoadAccessFault;
     }
@@ -34,6 +36,8 @@ Result store(u64 addr, u64 size, u64 val){
         return store_clint(addr, size, val);
     }else if(PLIC_BASE <= addr && addr < PLIC_BASE+PLIC_SIZE){
         return store_plic(addr, size, val);
+    }else if(UART_BASE <= addr && addr < UART_BASE+UART_SIZE){
+        return store_uart(addr, size, val);
     }else if(addr < DRAM_BASE){
         ret.exception = StoreAMOAccessFault;
     }
