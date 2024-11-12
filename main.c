@@ -26,12 +26,12 @@ int main(int argc, char* argv[]){
     loadROM(argv[1]);
     initCPU();
     // fetch-decode-execute cycle
-    while(cpu.pc != 0){
+    while(1){
         cpu.reg[0] = 0;
         Result cur_inst_res = fetch();
         u32 cur_inst;
         if(cur_inst_res.exception != NullException){
-            take_trap(cur_inst_res.exception);
+            take_exception(cur_inst_res.exception);
             if(is_fatal(cur_inst_res.exception)){
                 fprintf(stdout, "ERROR: %s\n", Exceptions[cur_inst_res.exception]);
                 break;
@@ -67,10 +67,22 @@ int main(int argc, char* argv[]){
         cpu.reg[0] = 0;
         Result exec_inst_res = execute(parsed_inst);
         if(exec_inst_res.exception != NullException){
-            take_trap(exec_inst_res.exception);
+            take_exception(exec_inst_res.exception);
             if(is_fatal(exec_inst_res.exception)){
                 fprintf(stderr, "ERROR: %s\n", Exceptions[exec_inst_res.exception]);
                 break;
+            }
+        }
+        Result check_pend_interrupt_res = check_pending_interrupt();
+        if(check_pend_interrupt_res.exception != NullException){
+            take_exception(check_pend_interrupt_res.exception);
+            if(is_fatal(check_pend_interrupt_res.exception)){
+                fprintf(stderr, "ERROR: %s\n", Exceptions[check_pend_interrupt_res.exception]);
+                break;
+            }
+        }else{
+            if(check_pend_interrupt_res.interrupt != NullInterrupt){
+                take_interrupt(check_pend_interrupt_res.interrupt);
             }
         }
     }

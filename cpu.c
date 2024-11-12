@@ -59,7 +59,7 @@ Result check_pending_interrupt() {
                 return (Result){.interrupt=NullInterrupt};
             break;
     }
-    Result ret;
+    Result ret = {.exception = NullException, .interrupt = NullInterrupt};
     int irq = 0;
     // Check external interrupt for uart.
     if(is_uart_interrupting())
@@ -103,6 +103,8 @@ Result check_pending_interrupt() {
             store_csr(MIP, load_csr(MIP) & (~MIP_STIP));
             return (Result){.exception=NullException, .interrupt=SupervisorTimerInterrupt};
         }
+        else
+            return (Result){.exception = NullException, .interrupt = NullInterrupt};
     }
     else
         return ret;

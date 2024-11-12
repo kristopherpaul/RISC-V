@@ -40,6 +40,8 @@ void dump_regs();
 
 void dump_csrs();
 
+Result check_pending_interrupt();
+
 Result fetch();
 
 Result execute(inst ins);
