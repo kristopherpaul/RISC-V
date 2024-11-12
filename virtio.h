@@ -19,6 +19,8 @@ extern VIRTIO virtio;
 
 void initVIRTIO(u8 disk_image[]);
 
+bool is_virtio_interrupting();
+
 Result load_virtio(u64 addr, u64 size);
 
 Result store_virtio(u64 addr, u64 size, u64 val);

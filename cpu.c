@@ -63,9 +63,14 @@ Result check_pending_interrupt() {
     }
     Result ret = {.exception = NullException, .interrupt = NullInterrupt};
     int irq = 0;
-    // Check external interrupt for uart.
+    // Check external interrupt for uart and virtio.
     if(is_uart_interrupting())
         irq = UART_IRQ;
+    else if(is_virtio_interrupting()) {
+        // Access disk by direct memory access (DMA). An interrupt is raised after a disk access is done.
+        virtio_disk_access();
+        irq = VIRTIO_IRQ;
+    }
 
     if(irq) {
         ret = store(PLIC_SCLAIM, 32, irq);

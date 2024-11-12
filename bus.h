@@ -6,6 +6,7 @@
 #include "dram.h"
 #include "plic.h"
 #include "uart.h"
+#include "virtio.h"
 
 Result load(u64 addr, u64 size);
 

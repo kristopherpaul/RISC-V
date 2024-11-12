@@ -9,6 +9,8 @@ Result load(u64 addr, u64 size) {
         return load_uart(addr, size);
     else if(DRAM_BASE <= addr && addr < DRAM_BASE+DRAM_SIZE)
         return load_dram(addr, size);
+    else if(VIRTIO_BASE <= addr && addr < VIRTIO_BASE+VIRTIO_SIZE)
+        return load_virtio(addr, size);
     else
         return (Result){.exception = LoadAccessFault, .value = 0};
 }
@@ -22,6 +24,8 @@ Result store(u64 addr, u64 size, u64 val) {
         return store_uart(addr, size, val);
     else if(DRAM_BASE <= addr && addr < DRAM_BASE+DRAM_SIZE)
         return store_dram(addr, size, val);
+    else if(VIRTIO_BASE <= addr && addr < VIRTIO_BASE+VIRTIO_SIZE)
+        return store_virtio(addr, size, val);
     else
         return (Result){.exception = StoreAMOAccessFault, .value = 0};
 }

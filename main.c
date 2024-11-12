@@ -1,11 +1,12 @@
 #include "cpu.h"
 #include "utils.h"
-#include "dram.h"
+#include "bus.h"
 #include "trap.h"
 
 //#define LITTLE_ENDIAN
 
 // 32-bit
+u8 disk[VIRTIO_SIZE];
 
 void loadROM(char* fileName){
     FILE *file_ptr = fopen(fileName, "rb");
@@ -17,14 +18,31 @@ void loadROM(char* fileName){
     fclose(file_ptr);
 }
 
+void loadDISK(char* fileName){
+    FILE *file_ptr = fopen(fileName, "rb");
+    u8 buffer;
+    int ind = 0;
+    while(fread(&buffer, sizeof(buffer), 1, file_ptr) && ind<VIRTIO_SIZE){
+        disk[ind] = buffer;
+        ind++;
+    }
+    fclose(file_ptr);
+}
+
 int main(int argc, char* argv[]){
-    if(argc < 2){
-        printf("Usage: main <filename>");
+    if(argc < 2 || argc>3){
+        printf("Usage: main <filename> <(optional) image>");
         return 0;
     }
     cpu.pc = 0;
     loadROM(argv[1]);
+    if(argc==3)
+        loadDISK(argv[2]);
+    else
+        memset(disk, 0, VIRTIO_SIZE);
     initCPU();
+    initUART();
+    initVIRTIO(disk);
     // fetch-decode-execute cycle
     while(cpu.pc != 0){
         cpu.reg[0] = 0;

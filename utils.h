@@ -72,6 +72,29 @@
 #define UART_LSR_TX (1 << 5) // Transmitter empty
 #define UART_IRQ 10 // Interrupt Request of UART
 
+#define VIRTIO_BASE 0x10001000 // The address which virtio starts.
+#define VIRTIO_SIZE 0x1000 // The size of virtio.
+
+#define VIRTIO_IRQ 1 // The interrupt request of virtio.
+#define VRING_DESC_SIZE 16
+#define DESC_NUM 8 // The number of virtio descriptors. It must be a power of two.
+#define VIRTIO_MAGIC VIRTIO_BASE + 0x000 // Always return 0x74726976.
+#define VIRTIO_VERSION VIRTIO_BASE + 0x004 // The version. 1 is legacy.
+#define VIRTIO_DEVICE_ID VIRTIO_BASE + 0x008 // device type 1 is net, 2 is disk.
+#define VIRTIO_VENDOR_ID VIRTIO_BASE + 0x00c // Always return 0x554d4551
+#define VIRTIO_DEVICE_FEATURES VIRTIO_BASE + 0x010 // Device features.
+#define VIRTIO_DRIVER_FEATURES VIRTIO_BASE + 0x020 // Driver features.
+#define VIRTIO_GUEST_PAGE_SIZE VIRTIO_BASE + 0x028 // Page size for PFN, write-only.
+#define VIRTIO_QUEUE_SEL VIRTIO_BASE + 0x030 // Select queue, write-only.
+#define VIRTIO_QUEUE_NUM_MAX VIRTIO_BASE + 0x034 // Max size of current queue, read-only. In QEMU, `VIRTIO_COUNT = 8`.
+#define VIRTIO_QUEUE_NUM VIRTIO_BASE + 0x038 // Size of current queue, write-only.
+#define VIRTIO_QUEUE_PFN VIRTIO_BASE + 0x040 // Physical page number for queue, read and write.
+#define VIRTIO_QUEUE_NOTIFY VIRTIO_BASE + 0x050 // Notify the queue number, write-only.
+// Device status, read and write. Reading from this register returns the current device status flags.
+// Writing non-zero values to this register sets the status flags, indicating the OS/driver
+// progress. Writing zero (0x0) to this register triggers a device reset.
+#define VIRTIO_STATUS VIRTIO_BASE + 0x070
+
 #ifndef UTILS_H
 #define UTILS_H
 
