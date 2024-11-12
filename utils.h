@@ -1,3 +1,5 @@
+#ifndef UTILS_H
+#define UTILS_H
 #include<stdio.h>
 #include<stdint.h>
 #include<stdlib.h>
@@ -22,14 +24,14 @@
 #define DRAM_BASE 0x80000000
 
 // Machine-level CSRs
-#define MHARTID 0xf14 // Hardware thread ID
+//#define MHARTID 0xf14 // Hardware thread ID
 #define MSTATUS 0x300 // Machine status register
 #define MEDELEG 0x302 // Machine exception delegation register
 #define MIDELEG 0x303 // Machine interrupt delegation register
 #define MIE 0x304 // Machine interrupt-enable register
 #define MTVEC 0x305 // Machine trap-handler base address
-#define MCOUNTEREN 0x306 // Machine counter enable
-#define MSCRATCH 0x340 // Scratch register for machine trap handlers
+//#define MCOUNTEREN 0x306 // Machine counter enable
+//#define MSCRATCH 0x340 // Scratch register for machine trap handlers
 #define MEPC 0x341 // Machine exception program counter
 #define MCAUSE 0x342 // Machine trap cause
 #define MTVAL 0x343 // Machine bad address or instruction
@@ -39,7 +41,7 @@
 #define SSTATUS 0x100 // Supervisor status register
 #define SIE 0x104 // Supervisor interrupt-enable register
 #define STVEC 0x105 // Supervisor trap handler base address
-#define SSCRATCH 0x140 // Scratch register for supervisor trap handlers
+//#define SSCRATCH 0x140 // Scratch register for supervisor trap handlers
 #define SEPC 0x141 // Supervisor exception program counter
 #define SCAUSE 0x142 // Supervisor trap cause
 #define STVAL 0x143 // Supervisor bad address or instruction
@@ -90,13 +92,7 @@
 #define VIRTIO_QUEUE_NUM VIRTIO_BASE + 0x038 // Size of current queue, write-only.
 #define VIRTIO_QUEUE_PFN VIRTIO_BASE + 0x040 // Physical page number for queue, read and write.
 #define VIRTIO_QUEUE_NOTIFY VIRTIO_BASE + 0x050 // Notify the queue number, write-only.
-// Device status, read and write. Reading from this register returns the current device status flags.
-// Writing non-zero values to this register sets the status flags, indicating the OS/driver
-// progress. Writing zero (0x0) to this register triggers a device reset.
 #define VIRTIO_STATUS VIRTIO_BASE + 0x070
-
-#ifndef UTILS_H
-#define UTILS_H
 
 #define MIP_SSIP (1 << 1)
 #define MIP_MSIP (1 << 3)
@@ -189,6 +185,12 @@ typedef struct RESULT {
     Exception exception;
     Interrupt interrupt;
 } Result;
+
+typedef enum Access{
+    Instruction,
+    Load,
+    Store
+} Access;
 
 static i32 sext32(u32 rest_num, u32 sign, u8 num_bits){
     u32 val = 0;
