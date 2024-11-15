@@ -604,6 +604,9 @@ Result execute(inst ins){
                                             break;
                                     }
                                     break;
+                                case 0x9:
+                                    //sfence.vma
+                                    break;
                                 default:
                                     ret.exception = IllegalInstruction;
                             }
@@ -612,6 +615,9 @@ Result execute(inst ins){
                             switch(ins.funct7){
                                 case 0x0: //ebreak
                                     ret.exception = Breakpoint;
+                                    break;
+                                case 0x9:
+                                    //sfence.vma
                                     break;
                                 default:
                                     ret.exception = IllegalInstruction;
@@ -654,6 +660,9 @@ Result execute(inst ins){
                                     }
                                     store_csr(MSTATUS, load_csr(MSTATUS) | (1<<7));
                                     store_csr(MSTATUS, load_csr(MSTATUS) & (~(0x3<<11)));
+                                    break;
+                                case 0x9:
+                                    //sfence.vma
                                     break;
                                 default:
                                     ret.exception = IllegalInstruction;

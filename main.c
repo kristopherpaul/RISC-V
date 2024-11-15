@@ -84,6 +84,23 @@ int main(int argc, char* argv[]){
         cpu.reg[0] = 0;
         Result exec_inst_res = execute(parsed_inst);
         if(exec_inst_res.exception != NullException){
+            printf("-------------\n");
+            printf("pc:0x%x\n", cpu.pc);
+            printf("inst:0x%x\n",cur_inst);
+            printf("opcode:0x%x | ",parsed_inst.opcode);
+            printf("rd:%u | ",parsed_inst.rd);
+            printf("rs1:%u | ",parsed_inst.rs1);
+            printf("rs2:%u\n",parsed_inst.rs2);
+            printf("imI:%d | ",parsed_inst.imI);
+            printf("imS:%d | ",parsed_inst.imS);
+            printf("imB:%d | ",parsed_inst.imB);
+            printf("imU:%d | ",parsed_inst.imU);
+            printf("imJ:%d\n",parsed_inst.imJ);
+            printf("funct3:0x%x | ",parsed_inst.funct3);
+            printf("funct7:0x%x | ",parsed_inst.funct7);
+            printf("shamt5:0x%x | ",parsed_inst.shamt5);
+            printf("shamt6:0x%x\n",parsed_inst.shamt6);
+            dump_regs();
             fprintf(stdout, "Exception Thrown: %s\n", Exceptions[exec_inst_res.exception]);
             take_exception(exec_inst_res.exception);
             if(is_fatal(exec_inst_res.exception)){
