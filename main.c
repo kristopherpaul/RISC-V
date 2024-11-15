@@ -47,6 +47,7 @@ int main(int argc, char* argv[]){
         Result cur_inst_res = fetch();
         u32 cur_inst;
         if(cur_inst_res.exception != NullException){
+            fprintf(stdout, "Exception Thrown: %s\n", Exceptions[cur_inst_res.exception]);
             take_exception(cur_inst_res.exception);
             if(is_fatal(cur_inst_res.exception)){
                 fprintf(stdout, "ERROR: %s\n", Exceptions[cur_inst_res.exception]);
@@ -78,11 +79,12 @@ int main(int argc, char* argv[]){
             printf("shamt6:0x%x\n",parsed_inst.shamt6);
             dump_regs();
             char rep;
-            scanf("%c",&rep);
+            fscanf(stdin, "%c",&rep);
         }
         cpu.reg[0] = 0;
         Result exec_inst_res = execute(parsed_inst);
         if(exec_inst_res.exception != NullException){
+            fprintf(stdout, "Exception Thrown: %s\n", Exceptions[exec_inst_res.exception]);
             take_exception(exec_inst_res.exception);
             if(is_fatal(exec_inst_res.exception)){
                 fprintf(stderr, "ERROR: %s\n", Exceptions[exec_inst_res.exception]);
@@ -91,13 +93,16 @@ int main(int argc, char* argv[]){
         }
         Result check_pend_interrupt_res = check_pending_interrupt();
         if(check_pend_interrupt_res.exception != NullException){
+            fprintf(stdout, "Exception Thrown: %s\n", Exceptions[check_pend_interrupt_res.exception]);
             take_exception(check_pend_interrupt_res.exception);
             if(is_fatal(check_pend_interrupt_res.exception)){
                 fprintf(stderr, "ERROR: %s\n", Exceptions[check_pend_interrupt_res.exception]);
                 break;
             }
-        }else{
+        }
+        else{
             if(check_pend_interrupt_res.interrupt != NullInterrupt){
+                fprintf(stdout, "Interrupt Thrown: %s\n", Interrupts[check_pend_interrupt_res.interrupt]);
                 take_interrupt(check_pend_interrupt_res.interrupt);
             }
         }

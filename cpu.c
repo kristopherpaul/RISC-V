@@ -4,9 +4,10 @@ CPU cpu;
 
 void initCPU(){
     cpu.reg[2] = DRAM_BASE + DRAM_SIZE;
-    //cpu.pc = 0;
     cpu.pc = DRAM_BASE;
     cpu.mode = Machine;
+    cpu.paging = false;
+    cpu.page_table = 0;
 }
 
 u64 load_csr(u64 addr){
@@ -111,7 +112,7 @@ void update_paging(u64 addr){
     if(addr != SATP){
         return;
     }
-    cpu.page_table = (load_csr(SATP)&(((u64)1<<44)-1)) * PAGE_SIZE;
+    cpu.page_table = (load_csr(SATP) & 0xfffffffffff) * PAGE_SIZE;
     u64 mode = load_csr(SATP)>>60;
     if(mode == 8){
         cpu.paging = true;
@@ -130,7 +131,7 @@ Result translate(u64 addr, Access access){
     u64 levels = 3;
     u64 vpn[3] = {(addr>>12) & 0x1ff, (addr>>21) & 0x1ff, (addr>>30) & 0x1ff};
     u64 a = cpu.page_table;
-    i64 i = levels-1;
+    i64 i = (i64)levels-1;
     u64 pte;
     while(1){
         pte = load(a+vpn[i]*8, 64).value;
@@ -138,19 +139,21 @@ Result translate(u64 addr, Access access){
         u64 r = (pte>>1)&1;
         u64 w = (pte>>2)&1;
         u64 x = (pte>>3)&1;
-        if((v == 0) || (r == 0 && w == 1)){
+        if(v == 0 || (r == 0 && w == 1)){
             switch(access){
                 case Instruction:
                     ret.exception = InstructionPageFault;
+                    return ret;
                     break;
                 case Load:
                     ret.exception = LoadPageFault;
+                    return ret;
                     break;
                 case Store:
                     ret.exception = StoreAMOPageFault;
+                    return ret;
                     break;
             }
-            break;
         }
         if(r == 1 || x == 1){
             break;
@@ -162,26 +165,24 @@ Result translate(u64 addr, Access access){
             switch(access){
                 case Instruction:
                     ret.exception = InstructionPageFault;
+                    return ret;
                     break;
                 case Load:
                     ret.exception = LoadPageFault;
+                    return ret;
                     break;
                 case Store:
                     ret.exception = StoreAMOPageFault;
+                    return ret;
                     break;
             }
-            break;
         }
-    }
-    if(ret.exception != NullException){
-        return ret;
     }
     u64 ppn[3] = {(pte>>10)&0x1ff, (pte>>19)&0x1ff, (pte>>28)&0x03ffffff};
     u64 offset = addr&0xfff;
     switch(i){
         case 0:
-            u64 _ppn = (pte >> 10) & 0x0fffffffffff;
-            ret.value = (_ppn<<12)|offset;
+            ret.value = (((pte >> 10) & 0x0fffffffffff)<<12)|offset;
             break;
         case 1:
             ret.value = (ppn[2]<<30) | (ppn[1]<<21) | (vpn[0]<<12) | offset;
@@ -231,30 +232,16 @@ inst decode(u32 ins){
 }
 
 Result fetch(){
-    Result ret;
-    ret.exception = NullException;
     Result trans_res = translate(cpu.pc, Instruction);
     if(trans_res.exception != NullException){
         return trans_res;
     }
     u64 rpc = trans_res.value;
-    u32 ins = 0;
-    if(rpc < DRAM_BASE){
-        ret.exception = InstructionAccessFault;
-        return ret;
-    }
-    for(int i = 0;i < 4;i++){
-        ins |= dram.mem[rpc-DRAM_BASE+i] << (i*8);
-    }
-    /*if(ins == 0){
-        fprintf(stderr, "ERROR: Instruction couldn't be fetched!");
-        exit(-1);
-    }*/
-    #ifdef LITTLE_ENDIAN
-        ins = ((ins&0xff) << 24) | (((ins>>8)&0xff) << 16) | (((ins>>16)&0xff) << 8) | ((ins>>24)&0xff);
-    #endif
-    ret.value = ins;
-    return ret;
+    Result load_res = load(rpc, 32);
+    u32 ins = (u32)load_res.value;
+    if(load_res.exception != NullException)
+        return (Result){.exception=InstructionAccessFault, .value=ins};
+    return (Result){.exception=NullException, .value=ins};
 }
 
 Result execute(inst ins){
@@ -349,20 +336,22 @@ Result execute(inst ins){
             addr = cpu.reg[ins.rs1] + ins.imS;
             switch(ins.funct3){
                 case 0x0: //sb
-                    store(addr, 8, cpu.reg[ins.rs2]);
+                    store_res = tstore(addr, 8, cpu.reg[ins.rs2], Store);
                     break;
                 case 0x1: //sh
-                    store(addr, 16, cpu.reg[ins.rs2]);
+                    store_res = tstore(addr, 16, cpu.reg[ins.rs2], Store);
                     break;
                 case 0x2: //sw
-                    store(addr, 32, cpu.reg[ins.rs2]);
+                    store_res = tstore(addr, 32, cpu.reg[ins.rs2], Store);
                     break;
                 case 0x3: //sd
-                    store(addr, 64, cpu.reg[ins.rs2]);
+                    store_res = tstore(addr, 64, cpu.reg[ins.rs2], Store);
                     break;
                 default:
                     ret.exception = IllegalInstruction;
             }
+            if(store_res.exception!=NullException)
+                ret.exception = store_res.exception;
             break;
         
         case 0x13: //I-type
@@ -409,37 +398,37 @@ Result execute(inst ins){
             addr = cpu.reg[ins.rs1] + ins.imI;
             switch(ins.funct3){
                 case 0x0: //lb
-                    load_res = load(addr, 8);
+                    load_res = tload(addr, 8, Load);
                     ret.exception = load_res.exception;
                     cpu.reg[ins.rd] = (u64)(i64)(i8)load_res.value;
                     break;
                 case 0x1: //lh
-                    load_res = load(addr, 16);
+                    load_res = tload(addr, 16, Load);
                     ret.exception = load_res.exception;
                     cpu.reg[ins.rd] = (u64)(i64)(i16)load_res.value;
                     break;
                 case 0x2: //lw
-                    load_res = load(addr, 32);
+                    load_res = tload(addr, 32, Load);
                     ret.exception = load_res.exception;
                     cpu.reg[ins.rd] = (u64)(i64)(i32)load_res.value;
                     break;
                 case 0x3: //ld
-                    load_res = load(addr, 64);
+                    load_res = tload(addr, 64, Load);
                     ret.exception = load_res.exception;
                     cpu.reg[ins.rd] = load_res.value;
                     break;
                 case 0x4: //lbu
-                    load_res = load(addr, 8);
+                    load_res = tload(addr, 8, Load);
                     ret.exception = load_res.exception;
                     cpu.reg[ins.rd] = load_res.value;
                     break;
                 case 0x5: //lhu
-                    load_res = load(addr, 16);
+                    load_res = tload(addr, 16, Load);
                     ret.exception = load_res.exception;
                     cpu.reg[ins.rd] = load_res.value;
                     break;
                 case 0x6: //lwu
-                    load_res = load(addr, 32);
+                    load_res = tload(addr, 32, Load);
                     ret.exception = load_res.exception;
                     cpu.reg[ins.rd] = load_res.value;
                     break;
@@ -640,10 +629,10 @@ Result execute(inst ins){
                                     if(((load_csr(SSTATUS)>>5) & 0x1) == 1){
                                         store_csr(SSTATUS, load_csr(SSTATUS) | (1<<1));
                                     }else{
-                                        store_csr(SSTATUS, load_csr(SSTATUS) & !(1<<1));
+                                        store_csr(SSTATUS, load_csr(SSTATUS) & (~(1<<1)));
                                     }
                                     store_csr(SSTATUS, load_csr(SSTATUS) | (1<<5));
-                                    store_csr(SSTATUS, load_csr(SSTATUS) & !(1<<8));
+                                    store_csr(SSTATUS, load_csr(SSTATUS) & (~(1<<8)));
                                     break;
                                 case 0x18: //mret
                                     cpu.pc = load_csr(MEPC);
@@ -661,10 +650,10 @@ Result execute(inst ins){
                                     if(((load_csr(MSTATUS)>>7) & 1) == 1){
                                         store_csr(MSTATUS, load_csr(MSTATUS) | (1<<3));
                                     }else{
-                                        store_csr(MSTATUS, load_csr(MSTATUS) & !(1<<3));
+                                        store_csr(MSTATUS, load_csr(MSTATUS) & (~(1<<3)));
                                     }
                                     store_csr(MSTATUS, load_csr(MSTATUS) | (1<<7));
-                                    store_csr(MSTATUS, load_csr(MSTATUS) & !(0x3<<11));
+                                    store_csr(MSTATUS, load_csr(MSTATUS) & (~(0x3<<11)));
                                     break;
                                 default:
                                     ret.exception = IllegalInstruction;
@@ -725,21 +714,21 @@ Result execute(inst ins){
                 case 0x00:
                     switch(ins.funct3){
                         case 0x2: //amoadd.w
-                            load_res = load(cpu.reg[ins.rs1], 32);
+                            load_res = tload(cpu.reg[ins.rs1], 32, Load);
                             ret.exception = load_res.exception;
                             cpu.reg[ins.rd] = sext64(load_res.value, (load_res.value>>31)&1, 32);
                             val = load_res.value + (u32) cpu.reg[ins.rs2];
-                            store_res = store(cpu.reg[ins.rs1], 32, val);
+                            store_res = tstore(cpu.reg[ins.rs1], 32, val, Store);
                             if(ret.exception == NullException){
                                 ret.exception = store_res.exception;
                             }
                             break;
                         case 0x3: //amoadd.d
-                            load_res = load(cpu.reg[ins.rs1], 64);
+                            load_res = tload(cpu.reg[ins.rs1], 64, Load);
                             ret.exception = load_res.exception;
                             cpu.reg[ins.rd] = load_res.value;
                             val = load_res.value + cpu.reg[ins.rs2];
-                            store_res = store(cpu.reg[ins.rs1], 64, val);
+                            store_res = tstore(cpu.reg[ins.rs1], 64, val, Store);
                             if(ret.exception == NullException){
                                 ret.exception = store_res.exception;
                             }
@@ -751,18 +740,18 @@ Result execute(inst ins){
                 case 0x01:
                     switch(ins.funct3){
                         case 0x2: //amoswap.w
-                            load_res = load(cpu.reg[ins.rs1], 32);
+                            load_res = tload(cpu.reg[ins.rs1], 32, Load);
                             ret.exception = load_res.exception;
-                            store_res = store(cpu.reg[ins.rs1], 32, (u32) cpu.reg[ins.rs2]);
+                            store_res = tstore(cpu.reg[ins.rs1], 32, (u32) cpu.reg[ins.rs2], Store);
                             cpu.reg[ins.rd] = sext64(load_res.value, (load_res.value>>31)&1, 32);
                             if(ret.exception == NullException){
                                 ret.exception = store_res.exception;
                             }
                             break;
                         case 0x3: //amoswap.d
-                            load_res = load(cpu.reg[ins.rs1], 64);
+                            load_res = tload(cpu.reg[ins.rs1], 64, Load);
                             ret.exception = load_res.exception;
-                            store_res = store(cpu.reg[ins.rs1], 64, (u64) cpu.reg[ins.rs2]);
+                            store_res = tstore(cpu.reg[ins.rs1], 64, (u64) cpu.reg[ins.rs2], Store);
                             cpu.reg[ins.rd] = (u64) load_res.value;
                             if(ret.exception == NullException){
                                 ret.exception = store_res.exception;
