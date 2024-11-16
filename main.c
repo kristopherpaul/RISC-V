@@ -119,7 +119,7 @@ int main(int argc, char* argv[]){
         }
         else{
             if(check_pend_interrupt_res.interrupt != NullInterrupt){
-//                fprintf(stdout, "Interrupt Thrown: %s\n", Interrupts[check_pend_interrupt_res.interrupt]);
+                fprintf(stderr, "Interrupt Thrown: %s\n", Interrupts[check_pend_interrupt_res.interrupt]);
                 take_interrupt(check_pend_interrupt_res.interrupt);
             }
         }
