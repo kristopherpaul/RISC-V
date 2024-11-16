@@ -6,7 +6,7 @@
 //#define LITTLE_ENDIAN
 
 // 32-bit
-void loadROM(char* fileName){
+void loadBinary(char* fileName){
     FILE *file_ptr = fopen(fileName, "rb");
     u8 buffer;
     while(fread(&buffer, sizeof(buffer), 1, file_ptr)){
@@ -33,7 +33,7 @@ int main(int argc, char* argv[]){
         return 0;
     }
     cpu.pc = 0;
-    loadROM(argv[1]);
+    loadBinary(argv[1]);
     if(argc==3)
         loadDISK(argv[2]);
     else
@@ -50,7 +50,7 @@ int main(int argc, char* argv[]){
 //            fprintf(stdout, "Exception Thrown: %s\n", Exceptions[cur_inst_res.exception]);
             take_exception(cur_inst_res.exception);
             if(is_fatal(cur_inst_res.exception)){
-                fprintf(stdout, "ERROR: %s\n", Exceptions[cur_inst_res.exception]);
+                fprintf(stderr, "ERROR: %s\n", Exceptions[cur_inst_res.exception]);
                 break;
             }
             cur_inst = 0;
