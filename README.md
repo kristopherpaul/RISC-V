@@ -67,11 +67,18 @@ Ensure you have the following installed:
 - **`virtio.c`**: Virtio device support.
 - **`test.c`**: Testing utility to ensure correct implementation.
 
+[Documentation](https://drive.google.com/file/d/1sChNXvb8rtj_Xb-V7T73rbC3UzdCTvKi/view?usp=share_link)
+
 ## Authors
 
 <a href="https://github.com/kristopherpaul/risc-v/graphs/contributors">
   <img src="https://contrib.rocks/image?repo=kristopherpaul/risc-v" />
 </a>
+
+## Credits
+
+- [d0iasm/rvemu](https://github.com/d0iasm/rvemu-for-book)
+- [RISC-V ISA Manual](https://riscv.org/wp-content/uploads/2017/05/riscv-spec-v2.2.pdf)
 
 ## Contributing
 
