@@ -21,7 +21,7 @@ int main(int argc, char* argv[]) {
     // run on custom tests
     if(argc == 1) {
         struct dirent *entry;
-        DIR *dp = opendir("tests");
+        DIR *dp = opendir("tests/custom_tests");
 
         if (dp == NULL) {
             perror("opendir");
@@ -35,14 +35,14 @@ int main(int argc, char* argv[]) {
                 int len = strstr(entry->d_name, ".bin") - entry->d_name;
                 char fname[100] = "";
                 strncpy(fname, entry->d_name, len);
-                char cmd[1000] = "main tests/";
+                char cmd[1000] = "main tests/custom_tests/";
                 strcat(cmd, entry->d_name);
-                strcat(cmd, " 2> tests/");
+                strcat(cmd, " 2> tests/custom_tests/");
                 strcat(cmd, fname);
                 strcat(cmd, ".tmp");
                 exec_cmd(cmd);
 
-                char dcmd[1000] = "cd tests & findstr /V /G:";
+                char dcmd[1000] = "cd tests/custom_tests & findstr /V /G:";
                 strcat(dcmd, fname);
                 strcat(dcmd, ".out ");
                 strcat(dcmd, fname);
@@ -51,7 +51,7 @@ int main(int argc, char* argv[]) {
                 strcat(dcmd, ".diff");
                 exec_cmd(dcmd);
 
-                char dfname[100] = "tests/";
+                char dfname[100] = "tests/custom_tests/";
                 strcat(dfname, fname);
                 strcat(dfname, ".diff");
                 FILE *file = fopen(dfname, "r");
@@ -60,7 +60,7 @@ int main(int argc, char* argv[]) {
                 if (ftell(file) == 0) {
                     fclose(file);
                     printf(ANSI_COLOR_GREEN "PASSED" ANSI_COLOR_RESET "\n");
-                    char delcmd[1000] = "cd tests & del ";
+                    char delcmd[1000] = "cd tests/custom_tests & del ";
                     strcat(delcmd, fname);
                     strcat(delcmd, ".diff ");
                     strcat(delcmd, fname);
