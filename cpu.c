@@ -507,7 +507,8 @@ Result execute(inst ins){
                             if(cpu.reg[ins.rs2] == 0){
                                 //divison by 0, set DZ csr flag
                                 cpu.reg[ins.rd] = 0xffffffffffffffff;
-                            }else{
+                            }
+                            else{
                                 u32 temp = ((u32)cpu.reg[ins.rs1])/((u32)cpu.reg[ins.rs2]);
                                 cpu.reg[ins.rd] = sext64(temp, (temp>>31)&1, 32);
                             }
@@ -525,7 +526,8 @@ Result execute(inst ins){
                             if(cpu.reg[ins.rs2] == 0){
                                 //divison by 0, set DZ csr flag
                                 cpu.reg[ins.rd] = cpu.reg[ins.rs1];
-                            }else{
+                            }
+                            else{
                                 cpu.reg[ins.rd] = (u64)(i32)((u32)(cpu.reg[ins.rs1]) % (u32)(cpu.reg[ins.rs2]));
                             }
                             break;
@@ -630,12 +632,14 @@ Result execute(inst ins){
                                     cpu.pc = load_csr(SEPC);
                                     if(((load_csr(SSTATUS)>>8) & 0x1) == 1){
                                         cpu.mode = Supervisor;
-                                    }else{
+                                    }
+                                    else{
                                         cpu.mode = User;
                                     }
                                     if(((load_csr(SSTATUS)>>5) & 0x1) == 1){
                                         store_csr(SSTATUS, load_csr(SSTATUS) | (1<<1));
-                                    }else{
+                                    }
+                                    else{
                                         store_csr(SSTATUS, load_csr(SSTATUS) & (~(1<<1)));
                                     }
                                     store_csr(SSTATUS, load_csr(SSTATUS) | (1<<5));
@@ -656,7 +660,8 @@ Result execute(inst ins){
                                     }
                                     if(((load_csr(MSTATUS)>>7) & 1) == 1){
                                         store_csr(MSTATUS, load_csr(MSTATUS) | (1<<3));
-                                    }else{
+                                    }
+                                    else{
                                         store_csr(MSTATUS, load_csr(MSTATUS) & (~(1<<3)));
                                     }
                                     store_csr(MSTATUS, load_csr(MSTATUS) | (1<<7));
@@ -777,17 +782,10 @@ Result execute(inst ins){
             break;
 
         case 0x0:
-            //dump_regs();
-            //dump_csrs();
-            //exit(0);
             break;
 
         default:
             ret.exception = IllegalInstruction;
-            //dump_regs();
-            //dump_csrs();
-            //fprintf(stderr, "ERROR: Operation hasn't been implemented yet!");
-            //exit(-1);
             break;
     }
     return ret;

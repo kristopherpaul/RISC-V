@@ -142,6 +142,15 @@ int main(int argc, char* argv[]) {
                     strcat(delcmd, ".tmp");
                     exec_cmd(delcmd);
                 }
+                else if (strstr(entry->d_name, "-v-") && a0 == 1 && pass) {
+                    printf(ANSI_COLOR_GREEN "PASSED" ANSI_COLOR_RESET "\n");
+                    char delcmd[1000] = "cd ";
+                    strcat(delcmd, dir);
+                    strcat(delcmd, " & del ");
+                    strcat(delcmd, fname);
+                    strcat(delcmd, ".tmp");
+                    exec_cmd(delcmd);
+                }
                 else {
                     printf(ANSI_COLOR_RED "FAILED" ANSI_COLOR_RESET "\n");
                     failed = 1;
