@@ -99,7 +99,7 @@ void take_trap(void *e, bool interrupt){
         if(((load_csr(SSTATUS)>>1) & 1) == 1){
             val = load_csr(SSTATUS) | (1<<5);
         }else{
-            val = load_csr(SSTATUS) | (~(1<<5));
+            val = load_csr(SSTATUS) & (~(1<<5));
         }
         store_csr(SSTATUS, val);
         store_csr(SSTATUS, load_csr(SSTATUS) & (~(1<<1)));
@@ -133,7 +133,7 @@ void take_trap(void *e, bool interrupt){
         if(((load_csr(MSTATUS)>>3) & 1) == 1){
             val = load_csr(MSTATUS) | (1<<7);
         }else{
-            val = load_csr(MSTATUS) | (~(1<<7));
+            val = load_csr(MSTATUS) & (~(1<<7));
         }
         store_csr(MSTATUS, val);
         store_csr(MSTATUS, load_csr(MSTATUS) & (~(1<<3)));

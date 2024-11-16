@@ -47,7 +47,7 @@ int main(int argc, char* argv[]){
         Result cur_inst_res = fetch();
         u32 cur_inst;
         if(cur_inst_res.exception != NullException){
-            fprintf(stdout, "Exception Thrown: %s\n", Exceptions[cur_inst_res.exception]);
+//            fprintf(stdout, "Exception Thrown: %s\n", Exceptions[cur_inst_res.exception]);
             take_exception(cur_inst_res.exception);
             if(is_fatal(cur_inst_res.exception)){
                 fprintf(stdout, "ERROR: %s\n", Exceptions[cur_inst_res.exception]);
@@ -84,24 +84,24 @@ int main(int argc, char* argv[]){
         cpu.reg[0] = 0;
         Result exec_inst_res = execute(parsed_inst);
         if(exec_inst_res.exception != NullException){
-            printf("-------------\n");
-            printf("pc:0x%x\n", cpu.pc);
-            printf("inst:0x%x\n",cur_inst);
-            printf("opcode:0x%x | ",parsed_inst.opcode);
-            printf("rd:%u | ",parsed_inst.rd);
-            printf("rs1:%u | ",parsed_inst.rs1);
-            printf("rs2:%u\n",parsed_inst.rs2);
-            printf("imI:%d | ",parsed_inst.imI);
-            printf("imS:%d | ",parsed_inst.imS);
-            printf("imB:%d | ",parsed_inst.imB);
-            printf("imU:%d | ",parsed_inst.imU);
-            printf("imJ:%d\n",parsed_inst.imJ);
-            printf("funct3:0x%x | ",parsed_inst.funct3);
-            printf("funct7:0x%x | ",parsed_inst.funct7);
-            printf("shamt5:0x%x | ",parsed_inst.shamt5);
-            printf("shamt6:0x%x\n",parsed_inst.shamt6);
-            dump_regs();
-            fprintf(stdout, "Exception Thrown: %s\n", Exceptions[exec_inst_res.exception]);
+//            printf("-------------\n");
+//            printf("pc:0x%x\n", cpu.pc);
+//            printf("inst:0x%x\n",cur_inst);
+//            printf("opcode:0x%x | ",parsed_inst.opcode);
+//            printf("rd:%u | ",parsed_inst.rd);
+//            printf("rs1:%u | ",parsed_inst.rs1);
+//            printf("rs2:%u\n",parsed_inst.rs2);
+//            printf("imI:%d | ",parsed_inst.imI);
+//            printf("imS:%d | ",parsed_inst.imS);
+//            printf("imB:%d | ",parsed_inst.imB);
+//            printf("imU:%d | ",parsed_inst.imU);
+//            printf("imJ:%d\n",parsed_inst.imJ);
+//            printf("funct3:0x%x | ",parsed_inst.funct3);
+//            printf("funct7:0x%x | ",parsed_inst.funct7);
+//            printf("shamt5:0x%x | ",parsed_inst.shamt5);
+//            printf("shamt6:0x%x\n",parsed_inst.shamt6);
+//            dump_regs();
+//            fprintf(stdout, "Exception Thrown: %s\n", Exceptions[exec_inst_res.exception]);
             take_exception(exec_inst_res.exception);
             if(is_fatal(exec_inst_res.exception)){
                 fprintf(stderr, "ERROR: %s\n", Exceptions[exec_inst_res.exception]);
@@ -110,7 +110,7 @@ int main(int argc, char* argv[]){
         }
         Result check_pend_interrupt_res = check_pending_interrupt();
         if(check_pend_interrupt_res.exception != NullException){
-            fprintf(stdout, "Exception Thrown: %s\n", Exceptions[check_pend_interrupt_res.exception]);
+//            fprintf(stdout, "Exception Thrown: %s\n", Exceptions[check_pend_interrupt_res.exception]);
             take_exception(check_pend_interrupt_res.exception);
             if(is_fatal(check_pend_interrupt_res.exception)){
                 fprintf(stderr, "ERROR: %s\n", Exceptions[check_pend_interrupt_res.exception]);
@@ -119,7 +119,7 @@ int main(int argc, char* argv[]){
         }
         else{
             if(check_pend_interrupt_res.interrupt != NullInterrupt){
-                fprintf(stdout, "Interrupt Thrown: %s\n", Interrupts[check_pend_interrupt_res.interrupt]);
+//                fprintf(stdout, "Interrupt Thrown: %s\n", Interrupts[check_pend_interrupt_res.interrupt]);
                 take_interrupt(check_pend_interrupt_res.interrupt);
             }
         }
