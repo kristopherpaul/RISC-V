@@ -2,7 +2,7 @@ CC = gcc
 CFLAGS = -Wall -Werror
 
 MAIN_TARGET = main.exe
-MAIN_SRCS = main.c cpu.c trap.c clint.c dram.c plic.c uart.c bus.c virtio.c
+MAIN_SRCS = src/main.c src/cpu.c src/trap.c src/clint.c src/dram.c src/plic.c src/uart.c src/bus.c src/virtio.c
 
 TEST_TARGET = test.exe
 TEST_SRCS = test.c
