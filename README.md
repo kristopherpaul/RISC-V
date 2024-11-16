@@ -8,12 +8,12 @@ The emulator is built to support specific RISC-V instructions and hardware compo
 
 - **RISC-V Instruction Set**: Supports RV64I base integer instructions, parts of RV64M (integer multiplication/division), and RV64A (atomic operations).
 - **Hardware Simulation**:
-  - Central Processing Unit (CPU) &#x2611;
-  - Memory and System Bus &#x2611;
-  - Control and Status Registers (CSR) &#x2611;
-  - Exceptions, PLIC, and CLINT &#x2611;
-  - UART and Virtio for device emulation &#x2611;
-  - Virtual memory system &#x2612;
+  - Central Processing Unit (CPU) ✅
+  - Memory and System Bus ✅
+  - Control and Status Registers (CSR) ✅
+  - Exceptions, PLIC, and CLINT ✅
+  - UART and Virtio for device emulation ✅
+  - Virtual memory system ❌
 
 ## Prerequisites
 
