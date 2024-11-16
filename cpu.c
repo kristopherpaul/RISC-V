@@ -440,6 +440,7 @@ Result execute(inst ins){
         case 0x0f:
             switch(ins.funct3){
                 case 0x0: // fence
+                    break;
                 case 0x1: // fence.i
                     break;
                 default:
